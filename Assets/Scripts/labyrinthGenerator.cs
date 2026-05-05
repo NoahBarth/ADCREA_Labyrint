@@ -172,6 +172,6 @@ public class labyrinthGenerator : MonoBehaviour
             }
         }
 
-        Debug.Log($"✅ Kacheln erstellt: {wallCount} Wände, {floorCount} Böden");
+        Debug.Log($" Kacheln erstellt: {wallCount} Wände, {floorCount} Böden");
     }
 }
