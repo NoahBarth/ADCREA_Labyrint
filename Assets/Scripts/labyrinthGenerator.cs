@@ -7,6 +7,10 @@ public class labyrinthGenerator : MonoBehaviour
     public int height = 21;
     public GameObject wallPrefab;
     public GameObject floorPrefab;
+    // Size of one tile in world units. Adjust if your prefab sprite isn't 1x1.
+    public Vector2 tileSize = Vector2.one;
+    // Optional offset to center tiles if prefab pivot isn't centered.
+    public Vector2 tileOffset = Vector2.zero;
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
@@ -29,16 +33,32 @@ public class labyrinthGenerator : MonoBehaviour
             return;
         }
 
+        if (width < 3 || height < 3)
+        {
+            Debug.LogError("width und height müssen mindestens 3 sein, damit ein Rand aus Wänden möglich ist!");
+            return;
+        }
+
+        // Ensure odd dimensions so carving with 2-step directions yields a single-tile outer wall.
+        if (width % 2 == 0)
+        {
+            width += 1;
+            Debug.LogWarning($"width was even; incremented to {width} for proper maze generation.");
+        }
+        if (height % 2 == 0)
+        {
+            height += 1;
+            Debug.LogWarning($"height was even; incremented to {height} for proper maze generation.");
+        }
+
         Debug.Log($" Labyrinth wird generiert: {width}x{height}");
         GenerateGrid();
-        ApplyDFSGeneration(Vector2Int.one); // Startpunkt (1,1)
-        Visualize();
+        GenerateLabyrinth();
+        AddEntryAndExit();
+        VisualizeLabyrinth();
         Debug.Log("Labyrinth fertig!");
     }
 
-    /// <summary>
-    /// Erzeugt das initiale Grid - alle Kacheln als Wände
-    /// </summary>
     private void GenerateGrid()
     {
         grid = new Node[width, height];
@@ -59,80 +79,93 @@ public class labyrinthGenerator : MonoBehaviour
         }
     }
 
-    /// DFS-Algorithmus zur automatischen Labyrinth-Generierung
-    /// Entfernt Wände und erzeugt einen Pfad
-    private void ApplyDFSGeneration(Vector2Int startPos)
+    private void GenerateLabyrinth()
     {
-        if (!IsInside(startPos))
-        {
-            Debug.LogError("Startposition außerhalb des Grids!");
-            return;
-        }
-
-        Stack<Node> stack = new Stack<Node>(); // Stack für das Backtracking
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-
-        Node startNode = nodeLookup[startPos];
+        // Iterative DFS: use Peek so we explore deep paths and backtrack correctly
+        Stack<Node> stack = new Stack<Node>();
+        Vector2Int startPos = new Vector2Int(1, 1);
+        Node startNode = grid[startPos.x, startPos.y];
         startNode.type = TileType.Floor;
-        visited.Add(startPos);
         stack.Push(startNode);
 
         while (stack.Count > 0)
         {
-            Node current = stack.Peek();
-            List<Vector2Int> unvisitedNeighbors = GetUnvisitedNeighbors(current.position, visited);
+            Node currentNode = stack.Peek();
 
-            if (unvisitedNeighbors.Count > 0)
+            // Collect valid unvisited neighbors (2-cell steps)
+            List<Vector2Int> neighbors = new List<Vector2Int>();
+            foreach (Vector2Int dir in Directions)
             {
-                // Zufälligen unbesuchten Nachbarn wählen
-                Vector2Int nextPos = unvisitedNeighbors[Random.Range(0, unvisitedNeighbors.Count)];
-                
-                // Wand zwischen aktuellem Knoten und Nachbar entfernen
-                Vector2Int wallBetween = current.position + ((nextPos - current.position) / 2);
-                
-                nodeLookup[wallBetween].type = TileType.Floor;
-                nodeLookup[nextPos].type = TileType.Floor;
+                Vector2Int nextPos = currentNode.position + dir;
+                if (IsInBounds(nextPos) && grid[nextPos.x, nextPos.y].type == TileType.Wall)
+                {
+                    neighbors.Add(nextPos);
+                }
+            }
 
-                visited.Add(nextPos);
-                stack.Push(nodeLookup[nextPos]);
+            if (neighbors.Count > 0)
+            {
+                // Choose random neighbor and carve path
+                Vector2Int nextPos = neighbors[Random.Range(0, neighbors.Count)];
+                Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
+
+                grid[wallPos.x, wallPos.y].type = TileType.Floor;
+                grid[nextPos.x, nextPos.y].type = TileType.Floor;
+
+                stack.Push(grid[nextPos.x, nextPos.y]);
             }
             else
             {
-                // Backtrack: Keine unbesuchten Nachbarn, zurück im Stack
+                // No unvisited neighbors -> backtrack
                 stack.Pop();
             }
         }
     }
 
-    /// Findet alle unbesuchten Nachbarn (2er-Schritte für richtige Labyrinth-Struktur)
-    private List<Vector2Int> GetUnvisitedNeighbors(Vector2Int pos, HashSet<Vector2Int> visited)
+    private void AddEntryAndExit()
     {
-        List<Vector2Int> neighbors = new List<Vector2Int>();
+        // Fixed entry on the left side next to the start area.
+        grid[0, 1].type = TileType.Floor;
 
-        foreach (Vector2Int direction in Directions)
+        // Prefer an exit on the right side that touches an existing floor tile.
+        List<int> exitCandidates = new List<int>();
+        for (int y = 1; y < height - 1; y++)
         {
-            Vector2Int neighborPos = pos + direction;
-
-            if (IsInside(neighborPos) && !visited.Contains(neighborPos))
+            if (grid[width - 2, y].type == TileType.Floor)
             {
-                neighbors.Add(neighborPos);
+                exitCandidates.Add(y);
             }
         }
 
-        return neighbors;
+        int exitY = (exitCandidates.Count > 0)
+            ? exitCandidates[Random.Range(0, exitCandidates.Count)]
+            : height - 2;
+
+        grid[width - 1, exitY].type = TileType.Floor;
     }
 
- 
-    /// Prüft, ob eine Position innerhalb des Grids liegt
-    private bool IsInside(Vector2Int pos)
+    private List<Vector2Int> ShuffleDirections()
     {
-        return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
+        List<Vector2Int> shuffled = new List<Vector2Int>(Directions);
+        for (int i = 0; i < shuffled.Count; i++)
+        {
+            int randIndex = Random.Range(i, shuffled.Count);
+            Vector2Int temp = shuffled[i];
+            shuffled[i] = shuffled[randIndex];
+            shuffled[randIndex] = temp;
+        }
+        return shuffled;
     }
 
+    private bool IsInBounds(Vector2Int pos)
+    {
+        return pos.x > 0 && pos.x < width - 1 && pos.y > 0 && pos.y < height - 1;
+    }
 
-    /// Erzeugt die visuellen GameObjects basierend auf dem Grid (2D Version)
-
-    private void Visualize()
+    /// <summary>
+    /// Visualizes the grid using the configured prefabs, tileSize and tileOffset.
+    /// </summary>
+    private void VisualizeLabyrinth()
     {
         int wallCount = 0, floorCount = 0;
 
@@ -142,28 +175,37 @@ public class labyrinthGenerator : MonoBehaviour
             {
                 Node node = grid[x, y];
                 GameObject prefab = (node.type == TileType.Wall) ? wallPrefab : floorPrefab;
-                
-                // 2D Position: x und y als normale Koordinaten, z=0 für 2D
-                Vector3 position = new Vector3(x, y, 0);
+
+                float px = x * tileSize.x + tileOffset.x;
+                float py = y * tileSize.y + tileOffset.y;
+                Vector3 position = new Vector3(px, py, 0f);
+
                 GameObject tile = Instantiate(prefab, position, Quaternion.identity, transform);
                 tile.name = $"Tile_{x}_{y}_{node.type}";
                 node.visual = tile;
 
+                // Apply tile size as local scale so prefabs fit the grid
+                tile.transform.localScale = new Vector3(tileSize.x, tileSize.y, 1f);
+
                 if (node.type == TileType.Wall)
                 {
                     wallCount++;
-                    
-                    // Rigidbody2D für Wände hinzufügen (Collision für Player)
+
                     Rigidbody2D rb2d = tile.GetComponent<Rigidbody2D>();
                     if (rb2d == null)
                     {
                         rb2d = tile.AddComponent<Rigidbody2D>();
                     }
-                    
-                    // Rigidbody2D konfigurieren: Kinematisch, damit Wand nicht fällt
-                    rb2d.isKinematic = true;
-                    rb2d.gravityScale = 0;
+                    rb2d.bodyType = RigidbodyType2D.Kinematic;
+                    rb2d.gravityScale = 0f;
                     rb2d.constraints = RigidbodyConstraints2D.FreezeAll;
+
+                    // Ensure a collider exists for wall collisions
+                    Collider2D col = tile.GetComponent<Collider2D>();
+                    if (col == null)
+                    {
+                        tile.AddComponent<BoxCollider2D>();
+                    }
                 }
                 else
                 {
@@ -173,5 +215,4 @@ public class labyrinthGenerator : MonoBehaviour
         }
 
         Debug.Log($" Kacheln erstellt: {wallCount} Wände, {floorCount} Böden");
-    }
-}
+    }}

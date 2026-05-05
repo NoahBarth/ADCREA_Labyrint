@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -256,6 +257,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bc4cd2522072ba4b8a24634adfc7347, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  labyrinthRoot: {fileID: 0}
+  autoFitOnStart: 1
+  padding: {x: 1, y: 1}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,10 +385,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4faf7230b492f4055a3e451b36b6c82b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::labyrinthGenerator
-  width: 50
-  height: 50
+  width: 32
+  height: 32
   wallPrefab: {fileID: 8441117705821436438, guid: 09db4f5f6c4df4fd9844eef3c66b147b, type: 3}
   floorPrefab: {fileID: 1362134981357711295, guid: e53bb604f16ef4ca4bddc021973e8a2e, type: 3}
+  tileSize: {x: 1, y: 1}
+  tileOffset: {x: 0, y: 0}
 --- !u!4 &1290662187
 Transform:
   m_ObjectHideFlags: 0
