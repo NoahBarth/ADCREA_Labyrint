@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 public class labyrinthGenerator : MonoBehaviour
 {
-    [SerializeField] public int width = 21;
-    [SerializeField] public int height = 21;
-    [SerializeField] public GameObject wallPrefab;
-    [SerializeField] public GameObject floorPrefab;
+    public int width = 21;
+    public int height = 21;
+    public GameObject wallPrefab;
+    public GameObject floorPrefab;
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
@@ -22,9 +22,18 @@ public class labyrinthGenerator : MonoBehaviour
 
     private void Start()
     {
+        // Validierung: Prefabs müssen zugewiesen sein
+        if (wallPrefab == null || floorPrefab == null)
+        {
+            Debug.LogError("wallPrefab oder floorPrefab nicht im Inspector zugewiesen!");
+            return;
+        }
+
+        Debug.Log($" Labyrinth wird generiert: {width}x{height}");
         GenerateGrid();
         ApplyDFSGeneration(Vector2Int.one); // Startpunkt (1,1)
         Visualize();
+        Debug.Log("Labyrinth fertig!");
     }
 
     /// <summary>
@@ -50,10 +59,8 @@ public class labyrinthGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// DFS-Algorithmus zur automatischen Labyrinth-Generierung
     /// Entfernt Wände und erzeugt einen Pfad
-    /// </summary>
     private void ApplyDFSGeneration(Vector2Int startPos)
     {
         if (!IsInside(startPos))
@@ -97,9 +104,7 @@ public class labyrinthGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// Findet alle unbesuchten Nachbarn (2er-Schritte für richtige Labyrinth-Struktur)
-    /// </summary>
     private List<Vector2Int> GetUnvisitedNeighbors(Vector2Int pos, HashSet<Vector2Int> visited)
     {
         List<Vector2Int> neighbors = new List<Vector2Int>();
@@ -117,20 +122,20 @@ public class labyrinthGenerator : MonoBehaviour
         return neighbors;
     }
 
-    /// <summary>
+ 
     /// Prüft, ob eine Position innerhalb des Grids liegt
-    /// </summary>
     private bool IsInside(Vector2Int pos)
     {
         return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
     }
 
-    /// <summary>
-    /// Erzeugt die visuellen GameObjects basierend auf dem Grid
-    /// RICHTIG: Mit verschachtelten for-Loops statt foreach
-    /// </summary>
+
+    /// Erzeugt die visuellen GameObjects basierend auf dem Grid (2D Version)
+
     private void Visualize()
     {
+        int wallCount = 0, floorCount = 0;
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -138,10 +143,35 @@ public class labyrinthGenerator : MonoBehaviour
                 Node node = grid[x, y];
                 GameObject prefab = (node.type == TileType.Wall) ? wallPrefab : floorPrefab;
                 
-                Vector3 position = new Vector3(x, 0, y);
+                // 2D Position: x und y als normale Koordinaten, z=0 für 2D
+                Vector3 position = new Vector3(x, y, 0);
                 GameObject tile = Instantiate(prefab, position, Quaternion.identity, transform);
+                tile.name = $"Tile_{x}_{y}_{node.type}";
                 node.visual = tile;
+
+                if (node.type == TileType.Wall)
+                {
+                    wallCount++;
+                    
+                    // Rigidbody2D für Wände hinzufügen (Collision für Player)
+                    Rigidbody2D rb2d = tile.GetComponent<Rigidbody2D>();
+                    if (rb2d == null)
+                    {
+                        rb2d = tile.AddComponent<Rigidbody2D>();
+                    }
+                    
+                    // Rigidbody2D konfigurieren: Kinematisch, damit Wand nicht fällt
+                    rb2d.isKinematic = true;
+                    rb2d.gravityScale = 0;
+                    rb2d.constraints = RigidbodyConstraints2D.FreezeAll;
+                }
+                else
+                {
+                    floorCount++;
+                }
             }
         }
+
+        Debug.Log($"✅ Kacheln erstellt: {wallCount} Wände, {floorCount} Böden");
     }
 }
