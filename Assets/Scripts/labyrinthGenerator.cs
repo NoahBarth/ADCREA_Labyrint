@@ -3,16 +3,22 @@ using System.Collections.Generic;
 
 public class labyrinthGenerator : MonoBehaviour
 {
+    [Header("Labyrinth")]
     public int width = 21;
     public int height = 21;
     public GameObject wallPrefab;
     public GameObject floorPrefab;
-    // Size of one tile in world units. Adjust if your prefab sprite isn't 1x1.
     public Vector2 tileSize = Vector2.one;
-    // Optional offset to center tiles if prefab pivot isn't centered.
     public Vector2 tileOffset = Vector2.zero;
     // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
     public int additionalPaths = 5;
+
+    [Header("Player")]
+    public GameObject playerPrefab;
+
+    public Node StartNode { get; private set; }
+    public Node GoalNode  { get; private set; }
+    public bool IsReady   { get; private set; }
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
@@ -59,6 +65,8 @@ public class labyrinthGenerator : MonoBehaviour
         CarveAdditionalPaths();
         AddEntryAndExit();
         VisualizeLabyrinth();
+        IsReady = true;
+        SpawnPlayer();
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -183,6 +191,52 @@ public class labyrinthGenerator : MonoBehaviour
             : height - 2;
 
         grid[width - 1, exitY].type = TileType.Floor;
+
+        StartNode = grid[0, 1];
+        GoalNode  = grid[width - 1, exitY];
+    }
+
+    public List<Node> GetFloorNodes()
+    {
+        List<Node> floors = new List<Node>();
+        for (int x = 0; x < width; x++)
+            for (int y = 0; y < height; y++)
+                if (grid[x, y].type == TileType.Floor)
+                    floors.Add(grid[x, y]);
+        return floors;
+    }
+
+    public Vector3 GetWorldPosition(Node node)
+    {
+        return new Vector3(
+            node.position.x * tileSize.x + tileOffset.x,
+            node.position.y * tileSize.y + tileOffset.y,
+            0f);
+    }
+
+    private void SpawnPlayer()
+    {
+        Vector3 spawnPos = GetWorldPosition(StartNode);
+
+        GameObject player = (playerPrefab != null)
+            ? Instantiate(playerPrefab, spawnPos, Quaternion.identity)
+            : new GameObject();
+
+        player.name = "Player";
+        player.tag  = "Player";
+        player.transform.position = spawnPos;
+
+        if (player.GetComponent<SpriteRenderer>() == null)
+            player.AddComponent<SpriteRenderer>();
+
+        if (player.GetComponent<Pathfinder>() == null)
+            player.AddComponent<Pathfinder>();
+
+        PlayerController pc = player.GetComponent<PlayerController>();
+        if (pc == null)
+            pc = player.AddComponent<PlayerController>();
+
+        pc.SetGenerator(this);
     }
 
     private List<Vector2Int> ShuffleDirections()
@@ -228,7 +282,8 @@ public class labyrinthGenerator : MonoBehaviour
                 // Apply tile size as local scale so prefabs fit the grid
                 tile.transform.localScale = new Vector3(tileSize.x, tileSize.y, 1f);
 
-                if (node.type == TileType.Wall)
+                bool blockPlayer = tile.GetComponent<TileData>()?.isWall ?? (node.type == TileType.Wall);
+                if (blockPlayer)
                 {
                     wallCount++;
 
