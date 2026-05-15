@@ -90,9 +90,9 @@ public class Pathfinder : MonoBehaviour
         return finalStack;
     }
 
-    /// <summary>
+ 
     /// A*-Algorithmus (Dijkstra + Heuristik)
-    /// </summary>
+
     public Stack<Node> FindPathAStar(Node start, Node goal, List<Node> allNodes)
     {
         if (start == null || goal == null)
