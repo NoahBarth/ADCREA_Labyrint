@@ -11,6 +11,8 @@ public class labyrinthGenerator : MonoBehaviour
     public Vector2 tileSize = Vector2.one;
     // Optional offset to center tiles if prefab pivot isn't centered.
     public Vector2 tileOffset = Vector2.zero;
+    // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
+    public int additionalPaths = 5;
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
@@ -54,6 +56,7 @@ public class labyrinthGenerator : MonoBehaviour
         Debug.Log($" Labyrinth wird generiert: {width}x{height}");
         GenerateGrid();
         GenerateLabyrinth();
+        CarveAdditionalPaths();
         AddEntryAndExit();
         VisualizeLabyrinth();
         Debug.Log("Labyrinth fertig!");
@@ -120,6 +123,44 @@ public class labyrinthGenerator : MonoBehaviour
                 stack.Pop();
             }
         }
+    }
+
+    private void CarveAdditionalPaths()
+    {
+        // Create additional paths by randomly carving through walls
+        // This creates loops and multiple solutions to the maze
+        int pathsCarved = 0;
+        int maxAttempts = additionalPaths * 20; // Prevent infinite loops
+        int attempts = 0;
+
+        while (pathsCarved < additionalPaths && attempts < maxAttempts)
+        {
+            attempts++;
+
+            // Pick a random wall position
+            int randomX = Random.Range(1, width - 1);
+            int randomY = Random.Range(1, height - 1);
+
+            if (grid[randomX, randomY].type == TileType.Wall)
+            {
+                // Check if this wall separates two floor tiles
+                int floorNeighbors = 0;
+                if (randomX > 0 && grid[randomX - 1, randomY].type == TileType.Floor) floorNeighbors++;
+                if (randomX < width - 1 && grid[randomX + 1, randomY].type == TileType.Floor) floorNeighbors++;
+                if (randomY > 0 && grid[randomX, randomY - 1].type == TileType.Floor) floorNeighbors++;
+                if (randomY < height - 1 && grid[randomX, randomY + 1].type == TileType.Floor) floorNeighbors++;
+
+                // Only carve if it connects at least 2 different floor areas
+                if (floorNeighbors >= 2)
+                {
+                    grid[randomX, randomY].type = TileType.Floor;
+                    pathsCarved++;
+                    Debug.Log($"Additional path {pathsCarved} carved at ({randomX}, {randomY})");
+                }
+            }
+        }
+
+        Debug.Log($"Carved {pathsCarved} additional paths for multiple solutions");
     }
 
     private void AddEntryAndExit()
