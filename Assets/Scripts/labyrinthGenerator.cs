@@ -16,6 +16,13 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Player")]
     public GameObject playerPrefab;
 
+    [Header("DFS Visualisierung")]
+    // Wenn aktiv, wird nach der Generierung ein DFS-Lauf eingefärbt:
+    // Lösungspfad in dfsPathColor, besuchte Sackgassen/alternative Wege in deadEndColor.
+    public bool visualizeDFS = false;
+    public Color dfsPathColor = new Color(0.25f, 0.8f, 1f);   // gefundener Pfad (cyan)
+    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  // Sackgassen / alternative Knoten (rot)
+
     public Node StartNode { get; private set; }
     public Node GoalNode  { get; private set; }
     public bool IsReady   { get; private set; }
@@ -66,6 +73,12 @@ public class labyrinthGenerator : MonoBehaviour
         AddEntryAndExit();
         VisualizeLabyrinth();
         IsReady = true;
+
+        if (visualizeDFS)
+        {
+            RunDFSVisualization();
+        }
+
         SpawnPlayer();
         Debug.Log("Labyrinth fertig!");
     }
@@ -196,6 +209,30 @@ public class labyrinthGenerator : MonoBehaviour
         GoalNode  = grid[width - 1, exitY];
     }
 
+    /// <summary>
+    /// Liefert die begehbaren (Floor) Nachbarn eines Knotens in 1-Schritt-Distanz.
+    /// Nutzt das Dictionary nodeLookup für O(1)-Zugriff.
+    /// </summary>
+    public List<Node> GetWalkableNeighbors(Node node)
+    {
+        List<Node> result = new List<Node>();
+        if (node == null) return result;
+
+        Vector2Int[] dirs =
+        {
+            Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left
+        };
+
+        foreach (Vector2Int d in dirs)
+        {
+            if (nodeLookup.TryGetValue(node.position + d, out Node n) && n.type == TileType.Floor)
+            {
+                result.Add(n);
+            }
+        }
+        return result;
+    }
+
     public List<Node> GetFloorNodes()
     {
         List<Node> floors = new List<Node>();
@@ -204,6 +241,34 @@ public class labyrinthGenerator : MonoBehaviour
                 if (grid[x, y].type == TileType.Floor)
                     floors.Add(grid[x, y]);
         return floors;
+    }
+
+    /// <summary>
+    /// Führt eine DFS-Pfadsuche aus und färbt Lösungspfad sowie
+    /// besuchte Sackgassen / alternative Wege ein.
+    /// </summary>
+    private void RunDFSVisualization()
+    {
+        Pathfinder pathfinder = GetComponent<Pathfinder>();
+        if (pathfinder == null)
+            pathfinder = gameObject.AddComponent<Pathfinder>();
+
+        Stack<Node> path = pathfinder.FindPathDFS(StartNode, GoalNode, this, out List<Node> deadEnds);
+
+        // Zuerst Sackgassen einfärben, dann den Pfad darüber (Pfad gewinnt bei Überschneidung).
+        foreach (Node n in deadEnds)
+            TintNode(n, deadEndColor);
+        foreach (Node n in path)
+            TintNode(n, dfsPathColor);
+
+        Debug.Log($"DFS: Pfadlänge {path.Count}, besuchte Sackgassen/alternative Knoten {deadEnds.Count}");
+    }
+
+    private void TintNode(Node node, Color color)
+    {
+        if (node == null || node.visual == null) return;
+        SpriteRenderer sr = node.visual.GetComponent<SpriteRenderer>();
+        if (sr != null) sr.color = color;
     }
 
     public Vector3 GetWorldPosition(Node node)

@@ -6,6 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Unity 6 (6000.3.8f1) 2D top-down maze solver for the HSLU module **ADCREA** (Algorithmen & Datenstrukturen / Creative Computing). The player navigates automatically through a procedurally generated labyrinth using pathfinding algorithms. Built by Sandro Fankhauser and Noah Barth.
 
+## Anforderungen (Requirements)
+
+### Datenstrukturen
+- **2D Array**: Zur Speicherung und Initialisierung aller Bodenkacheln.
+- **List**: Resultat der Pfadsuche und Backtracking.
+- **Stack**: Zur Speicherung der berechneten Route, damit der Spieler die Wegpunkte nacheinander abarbeiten kann. (Dijkstra/A* liefern den Pfad in Rückwärts-Reihenfolge; ein Stack dreht ihn beim `Pop()` in die vom Spieler benötigte Vorwärts-Reihenfolge. Eine Queue wäre hier falsch — siehe Dozenten-Feedback.)
+- **Dictionary**: Für eine schnelle Koordinatenabfrage (Vector2 zu Node), um effizient zwischen Wänden und begehbaren Wegen zu unterscheiden.
+
+### Algorithmen
+- **Dijkstra oder A* & SortedList & HashSet**: Als Standard-Algorithmus, um zuverlässig den kürzesten Weg zum Ausgang zu finden.
+- **DFS (Depth-First Search)**: Um alternative Pfade zu visualisieren oder Sackgassen im Labyrinth aufzuzeigen.
+- **BST (Binary Search Tree)**: Jeder besuchte Knoten wird inklusive Zeitstempel eingefügt, um die Besuchsreihenfolge strukturiert abzubilden.
+
 ## Building and Running
 
 Open the project in **Unity 6000.3.8f1** and press Play in the Editor. There is no CLI build step or test runner — all iteration happens inside the Unity Editor. The main scene is `Assets/Scenes/SampleScene.unity`; a prefab-based variant lives at `Assets/LabyrinthPrefab.unity`.
@@ -33,6 +46,8 @@ Two public methods, both return a `Stack<Node>` in **forward order** (start → 
 - `FindPathAStar(start, goal, allNodes)` — A* (adds Manhattan/Euclidean heuristic via `hCost`)
 
 Both use `HashSet<Node> closedSet` and `List<Node> openList` sorted via `openList.Sort()` each iteration. Backtracking is handled by `BacktrackPath`: walks `parent` pointers from goal → start into a `List<Node>`, then pushes each node onto a `Stack<Node>` to reverse it into forward order.
+
+A third method `FindPathDFS(start, goal, generator, out deadEndNodes)` implements iterative **DFS** with a `Stack<Node>` plus a `cameFrom` dictionary. It returns the path as a forward-order `Stack<Node>` and outputs every visited node *not* on the final path via `deadEndNodes` (the dead ends / alternative routes). Unlike Dijkstra/A* (which scan all nodes), DFS uses real grid adjacency via `labyrinthGenerator.GetWalkableNeighbors(node)` — the 1-step orthogonal floor neighbors looked up in `nodeLookup`. The generator can color the result after generation when the `visualizeDFS` inspector toggle is on: solution path in `dfsPathColor`, dead ends in `deadEndColor` (see `RunDFSVisualization`/`TintNode`).
 
 Also contains `VisitTracker` (backed by a custom `BSTNode` BST keyed on `float` timestamps) used to record node visit order chronologically.
 

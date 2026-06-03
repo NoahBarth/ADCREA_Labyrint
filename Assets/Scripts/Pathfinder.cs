@@ -3,17 +3,16 @@ using System.Collections.Generic;
 
 public class Pathfinder : MonoBehaviour
 {
-    /// <summary>
     /// Dijkstra-Algorithmus zur Pfadfindung
-    /// </summary>
-    public Stack<Node> FindPath(Node start, Node goal, List<Node> allNodes)
+    public Stack<Node> FindPath(Node start, Node goal, labyrinthGenerator generator) //geringsten Gesamtkosten gCost
     {
-        if (start == null || goal == null)
+        if (start == null || goal == null || generator == null)
         {
-            Debug.LogError("Start oder Goal ist null!");
+            Debug.LogError("Start, Goal oder Generator ist null!");
             return new Stack<Node>();
         }
 
+        List<Node> allNodes = generator.GetFloorNodes();
         HashSet<Node> closedSet = new HashSet<Node>(); // Verarbeitete Knoten
         List<Node> openList = new List<Node>(); // Zu untersuchende Knoten
 
@@ -24,25 +23,25 @@ public class Pathfinder : MonoBehaviour
             node.parent = null;
         }
 
-        start.gCost = 0;
+        start.gCost = 0; //geringsten Kosten zum Start
         openList.Add(start);
 
-        while (openList.Count > 0)
+        while (openList.Count > 0) // Solange es Knoten gibt, die noch untersucht werden müssen
         {
-            // FEHLER BEHOBEN: openList.Sort() + openList[0] statt openList
+
             openList.Sort();
             Node current = openList[0];
             openList.RemoveAt(0);
 
-            if (current == goal)
+            if (current == goal)//geringste Kosten wird genommen
             {
                 break; // Pfad gefunden!
             }
 
             closedSet.Add(current);
 
-            // Nachbarn evaluieren (vereinfacht: alle Knoten)
-            foreach (Node neighbor in allNodes)
+            // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
+            foreach (Node neighbor in generator.GetWalkableNeighbors(current))
             {
                 if (closedSet.Contains(neighbor))
                     continue;
@@ -67,9 +66,9 @@ public class Pathfinder : MonoBehaviour
         return finalStack;
     }
 
-    /// <summary>
+   
     /// Backtracking: Pfad vom Ziel zum Start zurückverfolgen und umkehren
-    /// </summary>
+
     private Stack<Node> BacktrackPath(Node goal)
     {
         List<Node> pathList = new List<Node>();
@@ -93,14 +92,15 @@ public class Pathfinder : MonoBehaviour
  
     /// A*-Algorithmus (Dijkstra + Heuristik)
 
-    public Stack<Node> FindPathAStar(Node start, Node goal, List<Node> allNodes)
+    public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
     {
-        if (start == null || goal == null)
+        if (start == null || goal == null || generator == null)
         {
-            Debug.LogError("Start oder Goal ist null!");
+            Debug.LogError("Start, Goal oder Generator ist null!");
             return new Stack<Node>();
         }
 
+        List<Node> allNodes = generator.GetFloorNodes();
         HashSet<Node> closedSet = new HashSet<Node>();
         List<Node> openList = new List<Node>();
 
@@ -128,7 +128,8 @@ public class Pathfinder : MonoBehaviour
 
             closedSet.Add(current);
 
-            foreach (Node neighbor in allNodes)
+            // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
+            foreach (Node neighbor in generator.GetWalkableNeighbors(current))
             {
                 if (closedSet.Contains(neighbor))
                     continue;
@@ -149,6 +150,82 @@ public class Pathfinder : MonoBehaviour
         }
 
         return BacktrackPath(goal);
+    }
+
+    /// <summary>
+    /// DFS (Depth-First Search) zur Pfadfindung. Im Gegensatz zu Dijkstra/A*
+    /// findet DFS nicht zwingend den kürzesten Weg, eignet sich aber, um
+    /// alternative Pfade und Sackgassen im Labyrinth aufzuzeigen.
+    /// Gibt den gefundenen Pfad als Stack in Vorwärts-Reihenfolge (Start -> Ziel)
+    /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
+    /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
+    /// </summary>
+    public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
+    {
+        deadEndNodes = new List<Node>();
+        Stack<Node> finalPath = new Stack<Node>();
+
+        if (start == null || goal == null || generator == null)
+        {
+            Debug.LogError("DFS: Start, Goal oder Generator ist null!");
+            return finalPath;
+        }
+
+        HashSet<Node> visited = new HashSet<Node>();
+        Dictionary<Node, Node> cameFrom = new Dictionary<Node, Node>();
+        Stack<Node> stack = new Stack<Node>();
+
+        stack.Push(start);
+        visited.Add(start);
+        cameFrom[start] = null;
+
+        bool found = false;
+
+        while (stack.Count > 0)
+        {
+            Node current = stack.Pop();
+
+            if (current == goal)
+            {
+                found = true;
+                break;
+            }
+
+            foreach (Node neighbor in generator.GetWalkableNeighbors(current))
+            {
+                if (!visited.Contains(neighbor))
+                {
+                    visited.Add(neighbor);
+                    cameFrom[neighbor] = current;
+                    stack.Push(neighbor);
+                }
+            }
+        }
+
+        if (!found)
+        {
+            Debug.LogWarning("DFS: Kein Pfad zum Ziel gefunden!");
+            return finalPath;
+        }
+
+        // Pfad rekonstruieren (Ziel -> Start) und Knoten auf dem Pfad merken.
+        HashSet<Node> pathSet = new HashSet<Node>();
+        Node temp = goal;
+        while (temp != null)
+        {
+            finalPath.Push(temp); // Push dreht Ziel->Start in Start->Ziel (Vorwärts-Reihenfolge)
+            pathSet.Add(temp);
+            cameFrom.TryGetValue(temp, out temp);
+        }
+
+        // Sackgassen / alternative Wege = besuchte Knoten, die nicht auf dem Pfad liegen.
+        foreach (Node n in visited)
+        {
+            if (!pathSet.Contains(n))
+                deadEndNodes.Add(n);
+        }
+
+        return finalPath;
     }
 }
 

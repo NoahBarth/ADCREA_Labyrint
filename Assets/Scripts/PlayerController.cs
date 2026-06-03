@@ -43,8 +43,7 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
 
-        List<Node> floorNodes = generator.GetFloorNodes();
-        Stack<Node> path = pathfinder.FindPathAStar(generator.StartNode, generator.GoalNode, floorNodes);
+        Stack<Node> path = pathfinder.FindPathAStar(generator.StartNode, generator.GoalNode, generator);
 
         if (path == null || path.Count == 0)
         {
