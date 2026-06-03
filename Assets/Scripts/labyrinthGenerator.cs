@@ -16,12 +16,12 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Player")]
     public GameObject playerPrefab;
 
-    [Header("DFS Visualisierung")]
-    // Wenn aktiv, wird nach der Generierung ein DFS-Lauf eingefärbt:
-    // Lösungspfad in dfsPathColor, besuchte Sackgassen/alternative Wege in deadEndColor.
-    public bool visualizeDFS = false;
-    public Color dfsPathColor = new Color(0.25f, 0.8f, 1f);   // gefundener Pfad (cyan)
-    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  // Sackgassen / alternative Knoten (rot)
+    [Header("Sackgassen-Visualisierung")]
+    // Wenn aktiv, werden nach der Generierung alle echten Sackgassen rot eingefärbt:
+    // ein Feld mit nur einem begehbaren Nachbarn (Grad 1) plus der Korridor
+    // bis zur nächsten Kreuzung.
+    public bool visualizeDeadEnds = false;
+    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  // Sackgassen (rot)
 
     public Node StartNode { get; private set; }
     public Node GoalNode  { get; private set; }
@@ -74,9 +74,9 @@ public class labyrinthGenerator : MonoBehaviour
         VisualizeLabyrinth();
         IsReady = true;
 
-        if (visualizeDFS)
+        if (visualizeDeadEnds)
         {
-            RunDFSVisualization();
+            RunDeadEndVisualization();
         }
 
         SpawnPlayer();
@@ -244,24 +244,20 @@ public class labyrinthGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Führt eine DFS-Pfadsuche aus und färbt Lösungspfad sowie
-    /// besuchte Sackgassen / alternative Wege ein.
+    /// Ermittelt alle echten Sackgassen-Korridore und färbt sie ein.
     /// </summary>
-    private void RunDFSVisualization()
+    private void RunDeadEndVisualization()
     {
         Pathfinder pathfinder = GetComponent<Pathfinder>();
         if (pathfinder == null)
             pathfinder = gameObject.AddComponent<Pathfinder>();
 
-        Stack<Node> path = pathfinder.FindPathDFS(StartNode, GoalNode, this, out List<Node> deadEnds);
+        List<Node> deadEndCells = pathfinder.FindDeadEnds(this);
 
-        // Zuerst Sackgassen einfärben, dann den Pfad darüber (Pfad gewinnt bei Überschneidung).
-        foreach (Node n in deadEnds)
+        foreach (Node n in deadEndCells)
             TintNode(n, deadEndColor);
-        foreach (Node n in path)
-            TintNode(n, dfsPathColor);
 
-        Debug.Log($"DFS: Pfadlänge {path.Count}, besuchte Sackgassen/alternative Knoten {deadEnds.Count}");
+        Debug.Log($"Sackgassen: {deadEndCells.Count} Felder markiert.");
     }
 
     private void TintNode(Node node, Color color)

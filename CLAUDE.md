@@ -47,7 +47,9 @@ Two public methods, both return a `Stack<Node>` in **forward order** (start → 
 
 Both use `HashSet<Node> closedSet` and `List<Node> openList` sorted via `openList.Sort()` each iteration. Backtracking is handled by `BacktrackPath`: walks `parent` pointers from goal → start into a `List<Node>`, then pushes each node onto a `Stack<Node>` to reverse it into forward order.
 
-A third method `FindPathDFS(start, goal, generator, out deadEndNodes)` implements iterative **DFS** with a `Stack<Node>` plus a `cameFrom` dictionary. It returns the path as a forward-order `Stack<Node>` and outputs every visited node *not* on the final path via `deadEndNodes` (the dead ends / alternative routes). Unlike Dijkstra/A* (which scan all nodes), DFS uses real grid adjacency via `labyrinthGenerator.GetWalkableNeighbors(node)` — the 1-step orthogonal floor neighbors looked up in `nodeLookup`. The generator can color the result after generation when the `visualizeDFS` inspector toggle is on: solution path in `dfsPathColor`, dead ends in `deadEndColor` (see `RunDFSVisualization`/`TintNode`).
+A third method `FindPathDFS(start, goal, generator, out deadEndNodes)` implements iterative **DFS** with a `Stack<Node>` plus a `cameFrom` dictionary, returning the path as a forward-order `Stack<Node>`. All three pathfinders use real grid adjacency via `labyrinthGenerator.GetWalkableNeighbors(node)` — the 1-step orthogonal floor neighbors looked up in `nodeLookup`.
+
+`FindDeadEnds(generator)` is the dead-end detector used for visualization: a floor cell with exactly one walkable neighbor (degree 1, excluding start/goal) is a dead-end tip; the corridor is then traced from that tip until the next junction (degree ≥ 3). When the generator's `visualizeDeadEnds` inspector toggle is on, those corridors are colored `deadEndColor` after generation (see `RunDeadEndVisualization`/`TintNode`).
 
 Also contains `VisitTracker` (backed by a custom `BSTNode` BST keyed on `float` timestamps) used to record node visit order chronologically.
 
