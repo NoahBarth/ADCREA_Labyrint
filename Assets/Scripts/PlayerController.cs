@@ -13,7 +13,9 @@ public class PlayerController : MonoBehaviour
 
     private Pathfinder pathfinder;
 
-    public void SetGenerator(labyrinthGenerator gen) => generator = gen;
+    public void SetGenerator(labyrinthGenerator gen) {
+        generator = gen;
+    }
 
     private void Awake()
     {

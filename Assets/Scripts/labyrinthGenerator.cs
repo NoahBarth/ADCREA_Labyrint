@@ -286,9 +286,7 @@ public class labyrinthGenerator : MonoBehaviour
         {
             Vector3 spawnPos = basePos + new Vector3(i * tileSize.x * 1.2f, 0f, 0f);
 
-            GameObject player = (playerPrefab != null)
-                ? Instantiate(playerPrefab, spawnPos, Quaternion.identity)
-                : new GameObject();
+            GameObject player = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
 
             player.name = $"Player_{i + 1}";
             player.tag = "Player";
@@ -353,7 +351,10 @@ public class labyrinthGenerator : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Node node = grid[x, y];
-                GameObject prefab = (node.type == TileType.Wall) ? wallPrefab : floorPrefab;
+                GameObject prefab = floorPrefab;
+                if (node.type == TileType.Wall) {
+                    prefab = wallPrefab;
+                }
 
                 float px = x * tileSize.x + tileOffset.x;
                 float py = y * tileSize.y + tileOffset.y;
