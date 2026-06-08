@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class Pathfinder : MonoBehaviour
 {
     /// Dijkstra-Algorithmus zur Pfadfindung
-    public Stack<Node> FindPath(Node start, Node goal, labyrinthGenerator generator) //geringsten Gesamtkosten gCost
+    public Stack<Node> FindPathDijkstra(Node start, Node goal, labyrinthGenerator generator) //geringsten Gesamtkosten gCost
     {
         if (start == null || goal == null || generator == null)
         {
@@ -93,66 +93,66 @@ public class Pathfinder : MonoBehaviour
     /// A*-Algorithmus (Dijkstra + Heuristik)
     /// damit nicht nur der kürzeste Pfad gefunden wird, sondern auch schneller, indem die Suche in Richtung Ziel gelenkt wird.
 
-    public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
-    {
-        if (start == null || goal == null || generator == null)
-        {
-            Debug.LogError("Start, Goal oder Generator ist null!");
-            return new Stack<Node>();
-        }
+    // public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
+    // {
+    //     if (start == null || goal == null || generator == null)
+    //     {
+    //         Debug.LogError("Start, Goal oder Generator ist null!");
+    //         return new Stack<Node>();
+    //     }
 
-        List<Node> allNodes = generator.GetFloorNodes();
-        HashSet<Node> closedSet = new HashSet<Node>();
-        List<Node> openList = new List<Node>();
+    //     List<Node> allNodes = generator.GetFloorNodes();
+    //     HashSet<Node> closedSet = new HashSet<Node>();
+    //     List<Node> openList = new List<Node>();
 
-        // Initialisierung
-        foreach (Node node in allNodes)
-        {
-            node.gCost = float.MaxValue;
-            node.hCost = Vector2Int.Distance(node.position, goal.position);
-            node.parent = null;
-        }
+    //     // Initialisierung
+    //     foreach (Node node in allNodes)
+    //     {
+    //         node.gCost = float.MaxValue;
+    //         node.hCost = Vector2Int.Distance(node.position, goal.position);
+    //         node.parent = null;
+    //     }
 
-        start.gCost = 0;
-        openList.Add(start);
+    //     start.gCost = 0;
+    //     openList.Add(start);
 
-        while (openList.Count > 0)
-        {
-        //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
-            openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
-            Node current = openList[0];
-            openList.RemoveAt(0);
+    //     while (openList.Count > 0)
+    //     {
+    //     //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
+    //         openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
+    //         Node current = openList[0];
+    //         openList.RemoveAt(0);
 
-            if (current == goal)//wenn ziel erreicht
-            {
-                break;
-            }
+    //         if (current == goal)//wenn ziel erreicht
+    //         {
+    //             break;
+    //         }
 
-            closedSet.Add(current);
+    //         closedSet.Add(current);
 
-            // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
-            foreach (Node neighbor in generator.GetWalkableNeighbors(current))
-            {
-                if (closedSet.Contains(neighbor))
-                    continue;
+    //         // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
+    //         foreach (Node neighbor in generator.GetWalkableNeighbors(current))
+    //         {
+    //             if (closedSet.Contains(neighbor))
+    //                 continue;
 
-                float tentativeGCost = current.gCost + Vector2Int.Distance(current.position, neighbor.position);
+    //             float tentativeGCost = current.gCost + Vector2Int.Distance(current.position, neighbor.position);
 
-                if (tentativeGCost < neighbor.gCost)
-                {
-                    neighbor.gCost = tentativeGCost;
-                    neighbor.parent = current;
+    //             if (tentativeGCost < neighbor.gCost)
+    //             {
+    //                 neighbor.gCost = tentativeGCost;
+    //                 neighbor.parent = current;
 
-                    if (!openList.Contains(neighbor))
-                    {
-                        openList.Add(neighbor);
-                    }
-                }
-            }
-        }
+    //                 if (!openList.Contains(neighbor))
+    //                 {
+    //                     openList.Add(neighbor);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        return BacktrackPath(goal);
-    }
+    //     return BacktrackPath(goal);
+    // }
 
    
     /// DFS (Depth-First Search) zur Pfadfindung. Im Gegensatz zu Dijkstra/A*

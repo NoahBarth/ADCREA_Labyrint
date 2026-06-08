@@ -38,7 +38,7 @@ public class labyrinthGenerator : MonoBehaviour
         new Vector2Int(0, -2),   // Unten
         new Vector2Int(-2, 0)    // Links
     };
-
+    
     private void Start()
     {
         // Validierung: Prefabs müssen zugewiesen sein
@@ -73,7 +73,7 @@ public class labyrinthGenerator : MonoBehaviour
         AddEntryAndExit();
         VisualizeLabyrinth();
         IsReady = true;
-
+        // Position UI legend above the generated labyrinth (if assigned)
         if (visualizeDeadEnds)
         {
             RunDeadEndVisualization();
@@ -118,7 +118,8 @@ public class labyrinthGenerator : MonoBehaviour
 
             // Collect valid unvisited neighbors (2-cell steps)
             List<Vector2Int> neighbors = new List<Vector2Int>();
-            foreach (Vector2Int dir in Directions)
+            List<Vector2Int> dirs = ShuffleDirections();
+            foreach (Vector2Int dir in dirs)
             {
                 Vector2Int nextPos = currentNode.position + dir;
                 if (IsInBounds(nextPos) && grid[nextPos.x, nextPos.y].type == TileType.Wall)
@@ -295,7 +296,6 @@ public class labyrinthGenerator : MonoBehaviour
 
             SpriteRenderer sr = player.GetComponent<SpriteRenderer>();
             if (sr == null) sr = player.AddComponent<SpriteRenderer>();
-            sr.color = colors[i];
 
             if (player.GetComponent<Pathfinder>() == null)
                 player.AddComponent<Pathfinder>();
@@ -305,9 +305,24 @@ public class labyrinthGenerator : MonoBehaviour
                 pc = player.AddComponent<PlayerController>();
 
             pc.SetGenerator(this);
+
+            // Assign algorithm and visual properties after components are added so Awake() won't override them
+            switch (i)
+            {
+                case 0:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.Dijkstra;
+                    break;
+                case 1:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.DFS;
+                    break;
+            }
+
+            sr.color = colors[i];
+            player.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
         }
     }
 
+    
     private List<Vector2Int> ShuffleDirections()
     {
         List<Vector2Int> shuffled = new List<Vector2Int>(Directions);
