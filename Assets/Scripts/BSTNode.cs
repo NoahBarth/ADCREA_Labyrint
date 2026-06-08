@@ -1,6 +1,5 @@
-/// <summary>
+
 /// Binary Search Tree für Zeitstempel-basierte Besuchsreihenfolge
-/// </summary>
 public class BSTNode
 {
     public float timestamp;
