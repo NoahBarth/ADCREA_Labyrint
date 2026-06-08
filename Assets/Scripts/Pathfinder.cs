@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 public class Pathfinder : MonoBehaviour
 {
@@ -39,7 +40,7 @@ public class Pathfinder : MonoBehaviour
             }
 
             closedSet.Add(current);
-
+            current.color = Color.brown;
             // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
             foreach (Node neighbor in generator.GetWalkableNeighbors(current))
             {
@@ -162,30 +163,30 @@ public class Pathfinder : MonoBehaviour
     /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
     /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
   
-    public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
+    public Stack<Node> FindPathBFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
         deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
         if (start == null || goal == null || generator == null)
         {
-            Debug.LogError("DFS: Start, Goal oder Generator ist null!");
+            Debug.LogError("BFS: Start, Goal oder Generator ist null!");
             return finalPath;
         }
 
         HashSet<Node> visited = new HashSet<Node>();
         Dictionary<Node, Node> cameFrom = new Dictionary<Node, Node>();
-        Stack<Node> stack = new Stack<Node>();
+        Queue<Node> queue = new Queue<Node>();
 
-        stack.Push(start);
+        queue.Enqueue(start);
         visited.Add(start);
         cameFrom[start] = null;
 
         bool found = false;
 
-        while (stack.Count > 0)
+        while (queue.Count > 0)
         {
-            Node current = stack.Pop();
+            Node current = queue.Dequeue();
 
             if (current == goal)
             {
@@ -198,15 +199,16 @@ public class Pathfinder : MonoBehaviour
                 if (!visited.Contains(neighbor))
                 {
                     visited.Add(neighbor);
+                    neighbor.color = Color.yellow; // Optional: Markiere besuchte Knoten visuell
                     cameFrom[neighbor] = current;
-                    stack.Push(neighbor);
+                    queue.Enqueue(neighbor);
                 }
             }
         }
 
         if (!found)
         {
-            Debug.LogWarning("DFS: Kein Pfad zum Ziel gefunden!");
+            Debug.LogWarning("BFS: Kein Pfad zum Ziel gefunden!");
             return finalPath;
         }
 

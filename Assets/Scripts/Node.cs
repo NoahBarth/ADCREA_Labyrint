@@ -13,6 +13,7 @@ public class Node : IComparable<Node>
     public float gCost = float.MaxValue;
     public float hCost = 0f; // Heuristik für A*
     public Node parent;
+    public Color color = Color.white; // Optional: Farbe für Visualisierung
 
     // Vergleich für die SortedList / SortedSet (Priorisierung nach Kosten)
     public int CompareTo(Node other)

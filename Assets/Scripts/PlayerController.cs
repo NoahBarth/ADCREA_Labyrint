@@ -7,8 +7,8 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private labyrinthGenerator generator;
-    [SerializeField] private float moveSpeed = 8f;
-    public enum PathfindingAlgorithm { Dijkstra, AStar, DFS }
+    public float moveSpeed = 20f;
+    public enum PathfindingAlgorithm { Dijkstra, AStar, BFS }
     public PathfindingAlgorithm algorithm = PathfindingAlgorithm.AStar;
 
     private Pathfinder pathfinder;
@@ -48,17 +48,18 @@ public class PlayerController : MonoBehaviour
         }
 
         Stack<Node> path;
+        List<Node> deadEnds = new List<Node>();
+
         switch (algorithm)
         {
             case PathfindingAlgorithm.Dijkstra:
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
                 break;
-            case PathfindingAlgorithm.DFS:
-                List<Node> deadEnds;
-                path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
+            case PathfindingAlgorithm.BFS:
+                path = pathfinder.FindPathBFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
                 break;
             default:
-                path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
+                path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
                 break;
         }
 

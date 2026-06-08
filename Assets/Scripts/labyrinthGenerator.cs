@@ -135,6 +135,8 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
+                grid[wallPos.x, wallPos.y].gCost = Random.Range(1,3); // Optional: Setze Kosten für den Pfadfinder
+                grid[wallPos.x, wallPos.y].hCost = 0f; // Optional: Setze Heuristik für den Pfadfinder
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
@@ -200,9 +202,10 @@ public class labyrinthGenerator : MonoBehaviour
             }
         }
 
-        int exitY = (exitCandidates.Count > 0)
-            ? exitCandidates[Random.Range(0, exitCandidates.Count)]
-            : height - 2;
+        int exitY = height - 2;
+        if (exitCandidates.Count > 0) {
+            exitY = exitCandidates[Random.Range(0, exitCandidates.Count)];
+        }
 
         grid[width - 1, exitY].type = TileType.Floor;
 
@@ -311,7 +314,7 @@ public class labyrinthGenerator : MonoBehaviour
                     pc.algorithm = PlayerController.PathfindingAlgorithm.Dijkstra;
                     break;
                 case 1:
-                    pc.algorithm = PlayerController.PathfindingAlgorithm.DFS;
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.BFS;
                     break;
             }
 
