@@ -79,7 +79,7 @@ public class labyrinthGenerator : MonoBehaviour
             RunDeadEndVisualization();
         }
 
-        SpawnPlayer();
+        SpawnPlayers();
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -275,29 +275,37 @@ public class labyrinthGenerator : MonoBehaviour
             0f);
     }
 
-    private void SpawnPlayer()
+    private void SpawnPlayers()
     {
-        Vector3 spawnPos = GetWorldPosition(StartNode);
+        Vector3 basePos = GetWorldPosition(StartNode);
 
-        GameObject player = (playerPrefab != null)
-            ? Instantiate(playerPrefab, spawnPos, Quaternion.identity)
-            : new GameObject();
+        Color[] colors = new Color[] { Color.red, Color.green, Color.blue };
 
-        player.name = "Player";
-        player.tag  = "Player";
-        player.transform.position = spawnPos;
+        for (int i = 0; i < 3; i++)
+        {
+            Vector3 spawnPos = basePos + new Vector3(i * tileSize.x * 1.2f, 0f, 0f);
 
-        if (player.GetComponent<SpriteRenderer>() == null)
-            player.AddComponent<SpriteRenderer>();
+            GameObject player = (playerPrefab != null)
+                ? Instantiate(playerPrefab, spawnPos, Quaternion.identity)
+                : new GameObject();
 
-        if (player.GetComponent<Pathfinder>() == null)
-            player.AddComponent<Pathfinder>();
+            player.name = $"Player_{i + 1}";
+            player.tag = "Player";
+            player.transform.position = spawnPos;
 
-        PlayerController pc = player.GetComponent<PlayerController>();
-        if (pc == null)
-            pc = player.AddComponent<PlayerController>();
+            SpriteRenderer sr = player.GetComponent<SpriteRenderer>();
+            if (sr == null) sr = player.AddComponent<SpriteRenderer>();
+            sr.color = colors[i];
 
-        pc.SetGenerator(this);
+            if (player.GetComponent<Pathfinder>() == null)
+                player.AddComponent<Pathfinder>();
+
+            PlayerController pc = player.GetComponent<PlayerController>();
+            if (pc == null)
+                pc = player.AddComponent<PlayerController>();
+
+            pc.SetGenerator(this);
+        }
     }
 
     private List<Vector2Int> ShuffleDirections()
