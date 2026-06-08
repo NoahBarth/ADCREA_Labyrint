@@ -280,9 +280,9 @@ public class labyrinthGenerator : MonoBehaviour
     {
         Vector3 basePos = GetWorldPosition(StartNode);
 
-        Color[] colors = new Color[] { Color.red, Color.green, Color.blue };
+        Color[] colors = new Color[] { Color.red, Color.blue };
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 2; i++)
         {
             Vector3 spawnPos = basePos + new Vector3(i * tileSize.x * 1.2f, 0f, 0f);
 
