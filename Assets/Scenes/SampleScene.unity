@@ -391,7 +391,10 @@ MonoBehaviour:
   floorPrefab: {fileID: 1362134981357711295, guid: e53bb604f16ef4ca4bddc021973e8a2e, type: 3}
   tileSize: {x: 1, y: 1}
   tileOffset: {x: 0, y: 0}
+  additionalPaths: 5
   playerPrefab: {fileID: 5577414267896186894, guid: d581deffd5168448c8a8d9258cf28221, type: 3}
+  visualizeDeadEnds: 1
+  deadEndColor: {r: 1, g: 0.45, b: 0.45, a: 1}
 --- !u!4 &1290662187
 Transform:
   m_ObjectHideFlags: 0

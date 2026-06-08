@@ -66,7 +66,7 @@ public class Pathfinder : MonoBehaviour
         return finalStack;
     }
 
-   
+
     /// Backtracking: Pfad vom Ziel zum Start zurückverfolgen und umkehren
 
     private Stack<Node> BacktrackPath(Node goal)
@@ -91,6 +91,7 @@ public class Pathfinder : MonoBehaviour
 
  
     /// A*-Algorithmus (Dijkstra + Heuristik)
+    /// damit nicht nur der kürzeste Pfad gefunden wird, sondern auch schneller, indem die Suche in Richtung Ziel gelenkt wird.
 
     public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
     {
@@ -117,11 +118,12 @@ public class Pathfinder : MonoBehaviour
 
         while (openList.Count > 0)
         {
+        //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
             openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
             Node current = openList[0];
             openList.RemoveAt(0);
 
-            if (current == goal)
+            if (current == goal)//wenn ziel erreicht
             {
                 break;
             }
@@ -152,14 +154,14 @@ public class Pathfinder : MonoBehaviour
         return BacktrackPath(goal);
     }
 
-    /// <summary>
+   
     /// DFS (Depth-First Search) zur Pfadfindung. Im Gegensatz zu Dijkstra/A*
-    /// findet DFS nicht zwingend den kürzesten Weg, eignet sich aber, um
-    /// alternative Pfade und Sackgassen im Labyrinth aufzuzeigen.
-    /// Gibt den gefundenen Pfad als Stack in Vorwärts-Reihenfolge (Start -> Ziel)
+    /// findet DFS nicht zwingend den kürzesten Weg, wird aber
+    /// alternative Pfade und Sackgassen im Labyrinth aufzeigen.
+    /// Gibt den gefundenen Pfad als Stack in Vorwärts-Reihenfolge 
     /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
     /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
-    /// </summary>
+  
     public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
         deadEndNodes = new List<Node>();
