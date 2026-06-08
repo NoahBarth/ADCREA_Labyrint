@@ -15,7 +15,7 @@ Unity 6 (6000.3.8f1) 2D-Top-Down-Labyrinthlöser für das HSLU-Modul **ADCREA** 
 - **Dictionary**: Für eine schnelle Koordinatenabfrage (Vector2 zu Node), um effizient zwischen Wänden und begehbaren Wegen zu unterscheiden.
 
 ### Algorithmen
-- **Dijkstra oder A-Star & SortedList & HashSet**: Als Standard-Algorithmus, um zuverlässig den kürzesten Weg zum Ausgang zu finden.
+- **Dijkstra & SortedList & HashSet**: Als Standard-Algorithmus, um zuverlässig den kürzesten Weg zum Ausgang zu finden.
 - **DFS (Depth-First Search / Tiefensuche)**: Um alternative Pfade zu visualisieren oder Sackgassen im Labyrinth aufzuzeigen.
 - **BST (Binary Search Tree / Binärer Suchbaum)**: Jeder besuchte Knoten wird inklusive Zeitstempel eingefügt, um die Besuchsreihenfolge strukturiert abzubilden.
 
