@@ -35,7 +35,7 @@ public class labyrinthGenerator : MonoBehaviour
 
     public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
     [Tooltip("Wie viele Kacheln pro Schritt eingefärbt werden. Höher = schneller. Min. 1.")]
-    public int pathTilesPerFrame =300;
+    public int pathTilesPerFrame =999;
 
     [Header("Sackgassen-Visualisierung")]
     // Wenn aktiv, werden nach der Generierung alle echte Sackgassen rot eingefärbt:
