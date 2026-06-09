@@ -33,10 +33,12 @@ public class labyrinthGenerator : MonoBehaviour
     public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
     public Color aStarPathColor = new Color(0.6f, 0.7f, 1f);   // AStar-Weg
 
-    public float pathStepDelay = 0.05f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
+    public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
+    [Tooltip("Wie viele Kacheln pro Schritt eingefärbt werden. Höher = schneller. Min. 1.")]
+    public int pathTilesPerFrame =300;
 
     [Header("Sackgassen-Visualisierung")]
-    // Wenn aktiv, werden nach der Generierung alle echten Sackgassen rot eingefärbt:
+    // Wenn aktiv, werden nach der Generierung alle echte Sackgassen rot eingefärbt:
     // ein Feld mit nur einem begehbaren Nachbarn (Grad 1) plus der Korridor
     // bis zur nächsten Kreuzung.
     public bool visualizeDeadEnds = false;
@@ -49,6 +51,8 @@ public class labyrinthGenerator : MonoBehaviour
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
     private Sprite trailSprite;
+    // Gespawnte Spieler nach Algorithmus, um sie nach ihrer Pfad-Einfärbung freizugeben.
+    private readonly Dictionary<PlayerController.PathfindingAlgorithm, PlayerController> spawnedPlayers = new();
 
     // Richtungen für DFS: 2er-Schritte (oben, rechts, unten, links)
     private static readonly Vector2Int[] Directions = new Vector2Int[]
@@ -94,14 +98,14 @@ public class labyrinthGenerator : MonoBehaviour
         AddEntryAndExit();
         VisualizeLabyrinth();
         ColorWeights();
-        if (visualizePath)
-            StartCoroutine(RunPathVisualization());
         IsReady = true;
         if (visualizeDeadEnds)
         {
             RunDeadEndVisualization();
         }
         SpawnPlayers();
+        if (visualizePath)
+            StartCoroutine(RunPathVisualization());
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -304,25 +308,42 @@ public class labyrinthGenerator : MonoBehaviour
         Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
         Stack<Node> aStarPath = pathfinder.FindPathAStar(StartNode, GoalNode, this);
 
-        // BFS zuerst färben, Dijkstra danach -> auf gemeinsamen Feldern bleibt der
-        // Dijkstra-Weg sichtbar; wo sie sich unterscheiden, sieht man beide Farben.
-        foreach (Node n in dfsPath)
-        {
-            TintNode(n, dfsPathColor);
-            yield return PathStepWait();
-        }
-        foreach (Node n in dijkstraPath)
-        {
-            TintNode(n, dijkstraPathColor);
-            yield return PathStepWait();
-        }
-        foreach (Node n in aStarPath)
-        {
-            TintNode(n, aStarPathColor);
-            yield return PathStepWait();
-        }
+        // Pro Algorithmus: erst den Weg einfärben, dann den zugehörigen Spieler starten.
+        // Reihenfolge: DFS -> A* -> Dijkstra.
+        yield return StartCoroutine(TintPath(dfsPath, dfsPathColor));
+        ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
+
+        yield return StartCoroutine(TintPath(aStarPath, aStarPathColor));
+        ReleasePlayer(PlayerController.PathfindingAlgorithm.AStar);
+
+        yield return StartCoroutine(TintPath(dijkstraPath, dijkstraPathColor));
+        ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
 
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
+    }
+
+    // Gibt den Spieler mit dem angegebenen Algorithmus zum Loslaufen frei.
+    private void ReleasePlayer(PlayerController.PathfindingAlgorithm algorithm)
+    {
+        if (spawnedPlayers.TryGetValue(algorithm, out PlayerController pc) && pc != null)
+            pc.Release();
+    }
+
+    // Färbt einen Pfad Kachel für Kachel ein. Pro Schritt werden pathTilesPerFrame
+    // Kacheln gefärbt (höher = schneller), danach wird einmal gewartet.
+    private IEnumerator TintPath(Stack<Node> path, Color color)
+    {
+        int batch = Mathf.Max(1, pathTilesPerFrame);
+        int count = 0;
+        foreach (Node n in path)
+        {
+            TintNode(n, color);
+            if (++count >= batch)
+            {
+                count = 0;
+                yield return PathStepWait();
+            }
+        }
     }
 
     private object PathStepWait()
@@ -395,6 +416,11 @@ public class labyrinthGenerator : MonoBehaviour
             sr.color = playerColors[i];
             pc.SetTrailColor(trailColors[i]);
             player.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+
+            // Bei aktiver Pfad-Visualisierung wartet der Spieler, bis seine Farbe
+            // fertig gezeichnet ist; sonst läuft er sofort los.
+            pc.waitForRelease = visualizePath;
+            spawnedPlayers[pc.algorithm] = pc;
         }
     }
 

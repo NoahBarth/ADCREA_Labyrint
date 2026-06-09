@@ -17,6 +17,16 @@ public class PlayerController : MonoBehaviour
     private HashSet<Vector2Int> markedCells = new HashSet<Vector2Int>();
     private Node lastTrailNode;
 
+    // Wenn true, wartet der Spieler mit dem Loslaufen, bis Release() aufgerufen wird.
+    // Der Generator nutzt das, um den Spieler erst nach seiner Pfad-Einfärbung zu starten.
+    public bool waitForRelease = false;
+    private bool released = false;
+
+    public void Release()
+    {
+        released = true;
+    }
+
     public void SetGenerator(labyrinthGenerator gen) {
         generator = gen;
     }
@@ -91,6 +101,10 @@ public class PlayerController : MonoBehaviour
         transform.position = generator.GetWorldPosition(generator.StartNode);
         MarkTrail(generator.StartNode, generator.StartNode);
         lastTrailNode = generator.StartNode;
+
+        // Warten, bis der Generator diesen Spieler freigibt (nach seiner Pfad-Einfärbung).
+        while (waitForRelease && !released)
+            yield return null;
 
         yield return StartCoroutine(MoveAlongPath(path));
         Debug.Log("Ziel erreicht!");
