@@ -12,7 +12,7 @@ public class labyrinthGenerator : MonoBehaviour
     public Vector2 tileOffset = Vector2.zero;
     // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
     // Loops created here let Dijkstra and BFS diverge onto different routes.
-    public int additionalPaths = 40;
+    public int additionalPaths = 500;
 
     [Header("Player")]
     public GameObject playerPrefab;
@@ -21,23 +21,27 @@ public class labyrinthGenerator : MonoBehaviour
     public bool enablePlayerTrails = true;
     public Color playerOneTrailColor = new Color(1f, 0.45f, 0.45f, 0.75f);
     public Color playerTwoTrailColor = new Color(0.45f, 0.65f, 1f, 0.75f);
+    public Color playerThreeTrailColor = new Color(0.6f, 1f, 0.45f, 0.75f);
 
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
+    private Pathfinder pathfinder;
+    public bool visualizeAlgorithmSteps = false; // Wenn true, werden die Schritte der Algorithmen animiert dargestellt
     // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per BFS berechnet.
     public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
-    public Color bfsPathColor      = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
+    public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
+    public Color aStarPathColor = new Color(0.6f, 0.7f, 1f);   // AStar-Weg
 
     [Header("Sackgassen-Visualisierung")]
     // Wenn aktiv, werden nach der Generierung alle echten Sackgassen rot eingefärbt:
     // ein Feld mit nur einem begehbaren Nachbarn (Grad 1) plus der Korridor
     // bis zur nächsten Kreuzung.
     public bool visualizeDeadEnds = false;
-    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  
+    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);
 
     public Node StartNode { get; private set; }
-    public Node GoalNode  { get; private set; }
-    public bool IsReady   { get; private set; }
+    public Node GoalNode { get; private set; }
+    public bool IsReady { get; private set; }
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
@@ -51,9 +55,10 @@ public class labyrinthGenerator : MonoBehaviour
         new Vector2Int(0, -2),   // Unten
         new Vector2Int(-2, 0)    // Links
     };
-    
+
     private void Start()
     {
+        pathfinder = GetComponent<Pathfinder>();
         // Validierung: Prefabs müssen zugewiesen sein
         if (wallPrefab == null || floorPrefab == null)
         {
@@ -85,15 +90,15 @@ public class labyrinthGenerator : MonoBehaviour
         CarveAdditionalPaths();
         AddEntryAndExit();
         VisualizeLabyrinth();
+        ColorWeights();
         if (visualizePath)
             RunPathVisualization();
+        SpawnPlayers();
         IsReady = true;
         if (visualizeDeadEnds)
         {
             RunDeadEndVisualization();
         }
-
-        SpawnPlayers();
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -149,9 +154,10 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
-                grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 4); // Betretungskosten für Dijkstra
+                grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 20); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
-                grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
+                grid[nextPos.x, nextPos.y].hCost = Vector2Int.Distance(nextPos, new Vector2Int(width - 1, height - 1)); // Heuristik für A*
+                grid[nextPos.x, nextPos.y].weight = Random.Range(1, 20);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
             }
@@ -168,7 +174,7 @@ public class labyrinthGenerator : MonoBehaviour
         // Create additional paths by randomly carving through walls
         // This creates loops and multiple solutions to the maze
         int pathsCarved = 0;
-        int maxAttempts = additionalPaths * 20; // Prevent infinite loops
+        int maxAttempts = additionalPaths * 30; // Prevent infinite loops
         int attempts = 0;
 
         while (pathsCarved < additionalPaths && attempts < maxAttempts)
@@ -197,6 +203,9 @@ public class labyrinthGenerator : MonoBehaviour
                 }
             }
         }
+        {
+            // zufällige Wand öffnen
+        }
 
         Debug.Log($"Carved {pathsCarved} additional paths for multiple solutions");
     }
@@ -217,14 +226,14 @@ public class labyrinthGenerator : MonoBehaviour
         }
 
         int exitY = height - 2;
-        if (exitCandidates.Count > 0) {
-            exitY = exitCandidates[Random.Range(0, exitCandidates.Count)];
-        }
+        // if (exitCandidates.Count > 0) {
+        //     exitY = exitCandidates[Random.Range(0, exitCandidates.Count)];
+        // }
 
         grid[width - 1, exitY].type = TileType.Floor;
 
         StartNode = grid[0, 1];
-        GoalNode  = grid[width - 1, exitY];
+        GoalNode = grid[width - 1, exitY];
     }
 
     /// <summary>
@@ -284,24 +293,36 @@ public class labyrinthGenerator : MonoBehaviour
     /// </summary>
     private void RunPathVisualization()
     {
+
         Pathfinder pathfinder = GetComponent<Pathfinder>();
         if (pathfinder == null)
             pathfinder = gameObject.AddComponent<Pathfinder>();
+        // if (visualizeAlgorithmSteps)
+        // {
+        // StartCoroutine(pathfinder.VisualizeDijkstra(StartNode, GoalNode, this));
+        // StartCoroutine(pathfinder.VisualizeAStar(StartNode, GoalNode, this));
+        // StartCoroutine(pathfinder.VisualizeDFS(StartNode, GoalNode, this));
+        //     return;
+        // }
+
 
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
-        Stack<Node> bfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
+        Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
+        Stack<Node> aStarPath = pathfinder.FindPathAStar(StartNode, GoalNode, this);
 
         // BFS zuerst färben, Dijkstra danach -> auf gemeinsamen Feldern bleibt der
         // Dijkstra-Weg sichtbar; wo sie sich unterscheiden, sieht man beide Farben.
-        foreach (Node n in bfsPath)
-            TintNode(n, bfsPathColor);
+        foreach (Node n in dfsPath)
+            TintNode(n, dfsPathColor);
         foreach (Node n in dijkstraPath)
             TintNode(n, dijkstraPathColor);
+        foreach (Node n in aStarPath)
+            TintNode(n, aStarPathColor);
 
-        Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {bfsPath.Count} Felder eingefärbt.");
+        // Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
     }
 
-    private void TintNode(Node node, Color color)
+    public void TintNode(Node node, Color color)
     {
         if (node == null || node.visual == null) return;
         SpriteRenderer sr = node.visual.GetComponent<SpriteRenderer>();
@@ -321,10 +342,10 @@ public class labyrinthGenerator : MonoBehaviour
     {
         Vector3 basePos = GetWorldPosition(StartNode);
 
-        Color[] playerColors = new Color[] { Color.red, Color.blue };
-        Color[] trailColors = new Color[] { playerOneTrailColor, playerTwoTrailColor };
+        Color[] playerColors = new Color[] { Color.red, Color.blue, Color.green };
+        Color[] trailColors = new Color[] { playerOneTrailColor, playerTwoTrailColor, playerThreeTrailColor };
 
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 3; i++)
         {
             Vector3 spawnPos = basePos + new Vector3(i * tileSize.x * 1.2f, 0f, 0f);
 
@@ -354,7 +375,10 @@ public class labyrinthGenerator : MonoBehaviour
                     pc.algorithm = PlayerController.PathfindingAlgorithm.Dijkstra;
                     break;
                 case 1:
-                    pc.algorithm = PlayerController.PathfindingAlgorithm.BFS;
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.AStar;
+                    break;
+                case 2:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.DFS;
                     break;
             }
 
@@ -415,7 +439,7 @@ public class labyrinthGenerator : MonoBehaviour
         return trailSprite;
     }
 
-    
+
     private List<Vector2Int> ShuffleDirections()
     {
         List<Vector2Int> shuffled = new List<Vector2Int>(Directions);
@@ -447,7 +471,8 @@ public class labyrinthGenerator : MonoBehaviour
             {
                 Node node = grid[x, y];
                 GameObject prefab = floorPrefab;
-                if (node.type == TileType.Wall) {
+                if (node.type == TileType.Wall)
+                {
                     prefab = wallPrefab;
                 }
 
@@ -491,4 +516,30 @@ public class labyrinthGenerator : MonoBehaviour
         }
 
         Debug.Log($" Kacheln erstellt: {wallCount} Wände, {floorCount} Böden");
-    }}
+    }
+
+    // Färbt begehbare Kacheln je nach ihren Betretungskosten ein
+    private void ColorWeights()
+    {
+        foreach (Node node in GetFloorNodes())
+        {
+            SpriteRenderer sr = node.visual.GetComponent<SpriteRenderer>();
+
+            if (sr != null) sr.color = GetWeightColor(node.weight);
+        }
+    }
+
+    private Color GetWeightColor(float weight)
+    {
+        if (weight <= 5)
+            return new Color(0.85f, 0.75f, 0.60f);
+
+        if (weight <= 10)
+            return new Color(0.70f, 0.55f, 0.35f);
+
+        if (weight <= 15)
+            return new Color(0.50f, 0.35f, 0.20f);
+
+        return new Color(0.25f, 0.15f, 0.05f);
+    }
+}

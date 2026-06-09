@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private labyrinthGenerator generator;
     public float moveSpeed = 300f;
-    public enum PathfindingAlgorithm { Dijkstra, AStar, BFS }
+    public enum PathfindingAlgorithm { Dijkstra, AStar, DFS }
     public PathfindingAlgorithm algorithm = PathfindingAlgorithm.AStar;
 
     private Pathfinder pathfinder;
@@ -69,7 +69,10 @@ public class PlayerController : MonoBehaviour
             case PathfindingAlgorithm.Dijkstra:
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
                 break;
-            case PathfindingAlgorithm.BFS:
+            case PathfindingAlgorithm.AStar:
+                path = pathfinder.FindPathAStar(generator.StartNode, generator.GoalNode, generator);
+                break;
+            case PathfindingAlgorithm.DFS:
                 path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
                 break;
             default:

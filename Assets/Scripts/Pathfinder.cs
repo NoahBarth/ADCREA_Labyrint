@@ -40,12 +40,14 @@ public class Pathfinder : MonoBehaviour
             }
 
             closedSet.Add(current);
-            current.color = Color.brown;
             // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
             foreach (Node neighbor in generator.GetWalkableNeighbors(current))
             {
                 if (closedSet.Contains(neighbor))
+                {
+                    neighbor.color = Color.yellow; // Bereits verarbeitet (geschlossen)
                     continue;
+                }
 
                 // Betretungskosten der Zelle als Kantengewicht -> Dijkstra weicht von der reinen
                 // Schritt-Zählung (BFS) ab und wählt dadurch einen anderen Weg.
@@ -92,79 +94,79 @@ public class Pathfinder : MonoBehaviour
         return finalStack;
     }
 
- 
+
     /// A*-Algorithmus (Dijkstra + Heuristik)
     /// damit nicht nur der kürzeste Pfad gefunden wird, sondern auch schneller, indem die Suche in Richtung Ziel gelenkt wird.
 
-    // public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
-    // {
-    //     if (start == null || goal == null || generator == null)
-    //     {
-    //         Debug.LogError("Start, Goal oder Generator ist null!");
-    //         return new Stack<Node>();
-    //     }
+    public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
+    {
+        if (start == null || goal == null || generator == null)
+        {
+            Debug.LogError("Start, Goal oder Generator ist null!");
+            return new Stack<Node>();
+        }
 
-    //     List<Node> allNodes = generator.GetFloorNodes();
-    //     HashSet<Node> closedSet = new HashSet<Node>();
-    //     List<Node> openList = new List<Node>();
+        List<Node> allNodes = generator.GetFloorNodes();
+        HashSet<Node> closedSet = new HashSet<Node>();
+        List<Node> openList = new List<Node>();
 
-    //     // Initialisierung
-    //     foreach (Node node in allNodes)
-    //     {
-    //         node.gCost = float.MaxValue;
-    //         node.hCost = Vector2Int.Distance(node.position, goal.position);
-    //         node.parent = null;
-    //     }
+        // Initialisierung
+        foreach (Node node in allNodes)
+        {
+            node.gCost = float.MaxValue;
+            node.hCost = Mathf.Abs(node.position.x - goal.position.x) + Mathf.Abs(node.position.y - goal.position.y); // Manhatten Distance
+            node.parent = null;
+        }
 
-    //     start.gCost = 0;
-    //     openList.Add(start);
+        start.gCost = 0;
+        openList.Add(start);
 
-    //     while (openList.Count > 0)
-    //     {
-    //     //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
-    //         openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
-    //         Node current = openList[0];
-    //         openList.RemoveAt(0);
+        while (openList.Count > 0)
+        {
+            //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
+            openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
+            Node current = openList[0];
+            openList.RemoveAt(0);
 
-    //         if (current == goal)//wenn ziel erreicht
-    //         {
-    //             break;
-    //         }
+            if (current == goal)//wenn ziel erreicht
+            {
+                break;
+            }
 
-    //         closedSet.Add(current);
+            closedSet.Add(current);
 
-    //         // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
-    //         foreach (Node neighbor in generator.GetWalkableNeighbors(current))
-    //         {
-    //             if (closedSet.Contains(neighbor))
-    //                 continue;
+            // Nur echte Gitter-Nachbarn (begehbare Floor-Felder) evaluieren
+            foreach (Node neighbor in generator.GetWalkableNeighbors(current))
+            {
+                if (closedSet.Contains(neighbor))
+                    continue;
 
-    //             float tentativeGCost = current.gCost + Vector2Int.Distance(current.position, neighbor.position);
+                float tentativeGCost = current.gCost + neighbor.weight;
 
-    //             if (tentativeGCost < neighbor.gCost)
-    //             {
-    //                 neighbor.gCost = tentativeGCost;
-    //                 neighbor.parent = current;
+                if (tentativeGCost < neighbor.gCost)
+                {
+                    neighbor.gCost = tentativeGCost;
+                    neighbor.parent = current;
 
-    //                 if (!openList.Contains(neighbor))
-    //                 {
-    //                     openList.Add(neighbor);
-    //                 }
-    //             }
-    //         }
-    //     }
+                    if (!openList.Contains(neighbor))
+                    {
+                        openList.Add(neighbor);
+                    }
+                }
+            }
+        }
 
-    //     return BacktrackPath(goal);
-    // }
+        return BacktrackPath(goal);
+    }
 
-   
+
     /// DFS (Depth-First Search) zur Pfadfindung. Im Gegensatz zu Dijkstra/A*
     /// findet DFS nicht zwingend den kürzesten Weg, wird aber
     /// alternative Pfade und Sackgassen im Labyrinth aufzeigen.
     /// Gibt den gefundenen Pfad als Stack in Vorwärts-Reihenfolge 
     /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
     /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
-  
+
     public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
         deadEndNodes = new List<Node>();
@@ -209,7 +211,7 @@ public class Pathfinder : MonoBehaviour
 
         if (!found)
         {
-            Debug.LogWarning("BFS: Kein Pfad zum Ziel gefunden!");
+            Debug.LogWarning("DFS: Kein Pfad zum Ziel gefunden!");
             return finalPath;
         }
 
@@ -232,6 +234,7 @@ public class Pathfinder : MonoBehaviour
 
         return finalPath;
     }
+
 
     /// Findet alle Sackgassen im Labyrinth. Ein Feld ist ein Sackgassen-Ende, wenn es nur EINEN begehbaren Nachbarn hat (Grad 1).
     /// Von jedem solchen Ende wird der Korridor bis zur nächsten Kreuzung
