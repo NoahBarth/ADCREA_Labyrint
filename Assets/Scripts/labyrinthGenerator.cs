@@ -93,12 +93,12 @@ public class labyrinthGenerator : MonoBehaviour
         ColorWeights();
         if (visualizePath)
             RunPathVisualization();
-        SpawnPlayers();
         IsReady = true;
         if (visualizeDeadEnds)
         {
             RunDeadEndVisualization();
         }
+        SpawnPlayers();
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -319,7 +319,7 @@ public class labyrinthGenerator : MonoBehaviour
         foreach (Node n in aStarPath)
             TintNode(n, aStarPathColor);
 
-        // Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
+        Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
     }
 
     public void TintNode(Node node, Color color)

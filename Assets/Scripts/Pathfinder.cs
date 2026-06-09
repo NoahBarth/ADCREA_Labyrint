@@ -12,6 +12,7 @@ public class Pathfinder : MonoBehaviour
             Debug.LogError("Start, Goal oder Generator ist null!");
             return new Stack<Node>();
         }
+        int visitedNodes = 0;
 
         List<Node> allNodes = generator.GetFloorNodes();
         HashSet<Node> closedSet = new HashSet<Node>(); // Verarbeitete Knoten
@@ -33,6 +34,7 @@ public class Pathfinder : MonoBehaviour
             openList.Sort();
             Node current = openList[0];
             openList.RemoveAt(0);
+            visitedNodes++;
 
             if (current == goal)//geringste Kosten wird genommen
             {
@@ -68,6 +70,7 @@ public class Pathfinder : MonoBehaviour
 
         // FEHLER BEHOBEN: Backtracking-Logik in die Methode verlegt
         Stack<Node> finalStack = BacktrackPath(goal);
+        Debug.Log($"Dijkstra: {visitedNodes} Knoten untersucht");
         return finalStack;
     }
 
@@ -100,6 +103,7 @@ public class Pathfinder : MonoBehaviour
 
     public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
     {
+        int visitedNodes = 0;
         if (start == null || goal == null || generator == null)
         {
             Debug.LogError("Start, Goal oder Generator ist null!");
@@ -127,6 +131,7 @@ public class Pathfinder : MonoBehaviour
             openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
             Node current = openList[0];
             openList.RemoveAt(0);
+            visitedNodes++;
 
             if (current == goal)//wenn ziel erreicht
             {
@@ -155,7 +160,7 @@ public class Pathfinder : MonoBehaviour
                 }
             }
         }
-
+        Debug.Log($"A*: {visitedNodes} Knoten untersucht");
         return BacktrackPath(goal);
     }
 
@@ -169,6 +174,7 @@ public class Pathfinder : MonoBehaviour
 
     public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
+        int visitedNodes = 0;
         deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
@@ -191,6 +197,7 @@ public class Pathfinder : MonoBehaviour
         while (stack.Count > 0)
         {
             Node current = stack.Pop();
+            visitedNodes++;
 
             if (current == goal)
             {
@@ -231,7 +238,7 @@ public class Pathfinder : MonoBehaviour
             if (!pathSet.Contains(n))
                 deadEndNodes.Add(n);
         }
-
+        Debug.Log($"DFS: {visitedNodes} Knoten untersucht");
         return finalPath;
     }
 
