@@ -12,7 +12,7 @@ public class labyrinthGenerator : MonoBehaviour
     public Vector2 tileSize = Vector2.one;
     public Vector2 tileOffset = Vector2.zero;
     // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
-    // Loops created here let Dijkstra and BFS diverge onto different routes.
+    // Loops created here let Dijkstra and DFS diverge onto different routes.
     public int additionalPaths = 500;
 
     [Header("Player")]
@@ -27,9 +27,9 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
     private Pathfinder pathfinder;
-    // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per BFS berechnet.
+    // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per DFS berechnet.
     public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
-    public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
+    public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // DFS-Weg
     public Color aStarPathColor = new Color(0.6f, 0.7f, 1f);   // AStar-Weg
 
     public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
@@ -289,7 +289,7 @@ public class labyrinthGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Färbt den Dijkstra-Weg und den BFS-Weg in den im Inspector gewählten Farben ein.
+    /// Färbt den Dijkstra-Weg und den DFS-Weg in den im Inspector gewählten Farben ein.
     /// Das sind genau die Wege, die die beiden Spieler ablaufen.
     /// </summary>
     private IEnumerator RunPathVisualization()
@@ -323,7 +323,7 @@ public class labyrinthGenerator : MonoBehaviour
         yield return StartCoroutine(TintPath(dijkstraPath, dijkstraPathColor));
         ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
 
-        Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
+        Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, DFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
     }
 
     // Gibt den Spieler mit dem angegebenen Algorithmus zum Loslaufen frei.
