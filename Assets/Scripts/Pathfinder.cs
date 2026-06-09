@@ -22,6 +22,7 @@ public class Pathfinder : MonoBehaviour
         foreach (Node node in allNodes)
         {
             node.gCost = float.MaxValue;
+            node.hCost = 0; // Dijkstra ignoriert Heuristik, aber Feld muss initialisiert werden
             node.parent = null;
         }
 
@@ -31,7 +32,7 @@ public class Pathfinder : MonoBehaviour
         while (openList.Count > 0) // Solange es Knoten gibt, die noch untersucht werden müssen
         {
 
-            openList.Sort();
+            openList.Sort((a, b) => a.gCost.CompareTo(b.gCost));
             Node current = openList[0];
             openList.RemoveAt(0);
             visitedNodes++;
@@ -128,7 +129,9 @@ public class Pathfinder : MonoBehaviour
         while (openList.Count > 0)
         {
             //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
-            openList.Sort(); // Sortiert nach gCost + hCost (F-Kosten)
+            openList.Sort((a, b) =>
+                (a.gCost + a.hCost).CompareTo(b.gCost + b.hCost)
+            );
             Node current = openList[0];
             openList.RemoveAt(0);
             visitedNodes++;
