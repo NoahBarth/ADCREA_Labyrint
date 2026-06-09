@@ -47,7 +47,9 @@ public class Pathfinder : MonoBehaviour
                 if (closedSet.Contains(neighbor))
                     continue;
 
-                float tentativeGCost = current.gCost + Vector2Int.Distance(current.position, neighbor.position);
+                // Betretungskosten der Zelle als Kantengewicht -> Dijkstra weicht von der reinen
+                // Schritt-Zählung (BFS) ab und wählt dadurch einen anderen Weg.
+                float tentativeGCost = current.gCost + neighbor.weight;
 
                 if (tentativeGCost < neighbor.gCost)
                 {

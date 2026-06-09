@@ -11,17 +11,24 @@ public class labyrinthGenerator : MonoBehaviour
     public Vector2 tileSize = Vector2.one;
     public Vector2 tileOffset = Vector2.zero;
     // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
-    public int additionalPaths = 5;
+    // Loops created here let Dijkstra and BFS diverge onto different routes.
+    public int additionalPaths = 8;
 
     [Header("Player")]
     public GameObject playerPrefab;
+
+    [Header("Pfad-Visualisierung")]
+    public bool visualizePath = true;
+    // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per BFS berechnet.
+    public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
+    public Color bfsPathColor      = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
 
     [Header("Sackgassen-Visualisierung")]
     // Wenn aktiv, werden nach der Generierung alle echten Sackgassen rot eingefärbt:
     // ein Feld mit nur einem begehbaren Nachbarn (Grad 1) plus der Korridor
     // bis zur nächsten Kreuzung.
     public bool visualizeDeadEnds = false;
-    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  // Sackgassen (rot)
+    public Color deadEndColor = new Color(1f, 0.45f, 0.45f);  
 
     public Node StartNode { get; private set; }
     public Node GoalNode  { get; private set; }
@@ -72,8 +79,9 @@ public class labyrinthGenerator : MonoBehaviour
         CarveAdditionalPaths();
         AddEntryAndExit();
         VisualizeLabyrinth();
+        if (visualizePath)
+            RunPathVisualization();
         IsReady = true;
-        // Position UI legend above the generated labyrinth (if assigned)
         if (visualizeDeadEnds)
         {
             RunDeadEndVisualization();
@@ -135,9 +143,9 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
-                grid[wallPos.x, wallPos.y].gCost = Random.Range(1,3); // Optional: Setze Kosten für den Pfadfinder
-                grid[wallPos.x, wallPos.y].hCost = 0f; // Optional: Setze Heuristik für den Pfadfinder
+                grid[wallPos.x, wallPos.y].weight = Random.Range(1, 4); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
+                grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
             }
@@ -264,10 +272,34 @@ public class labyrinthGenerator : MonoBehaviour
         Debug.Log($"Sackgassen: {deadEndCells.Count} Felder markiert.");
     }
 
+    /// <summary>
+    /// Färbt den Dijkstra-Weg und den BFS-Weg in den im Inspector gewählten Farben ein.
+    /// Das sind genau die Wege, die die beiden Spieler ablaufen.
+    /// </summary>
+    private void RunPathVisualization()
+    {
+        Pathfinder pathfinder = GetComponent<Pathfinder>();
+        if (pathfinder == null)
+            pathfinder = gameObject.AddComponent<Pathfinder>();
+
+        Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
+        Stack<Node> bfsPath = pathfinder.FindPathBFS(StartNode, GoalNode, this, out _);
+
+        // BFS zuerst färben, Dijkstra danach -> auf gemeinsamen Feldern bleibt der
+        // Dijkstra-Weg sichtbar; wo sie sich unterscheiden, sieht man beide Farben.
+        foreach (Node n in bfsPath)
+            TintNode(n, bfsPathColor);
+        foreach (Node n in dijkstraPath)
+            TintNode(n, dijkstraPathColor);
+
+        Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {bfsPath.Count} Felder eingefärbt.");
+    }
+
     private void TintNode(Node node, Color color)
     {
         if (node == null || node.visual == null) return;
         SpriteRenderer sr = node.visual.GetComponent<SpriteRenderer>();
+        if (sr == null) sr = node.visual.GetComponentInChildren<SpriteRenderer>();
         if (sr != null) sr.color = color;
     }
 

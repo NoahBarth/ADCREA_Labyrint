@@ -12,6 +12,7 @@ public class Node : IComparable<Node>
     // Für Dijkstra & A* Algorithmus
     public float gCost = float.MaxValue;
     public float hCost = 0f; // Heuristik für A*
+    public float weight = 1f; // Betretungskosten dieser Zelle (Dijkstra wertet sie aus, BFS ignoriert sie)
     public Node parent;
     public Color color = Color.white; // Optional: Farbe für Visualisierung
 
