@@ -17,6 +17,11 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Player")]
     public GameObject playerPrefab;
 
+    [Header("Player Trails")]
+    public bool enablePlayerTrails = true;
+    public Color playerOneTrailColor = new Color(1f, 0.45f, 0.45f, 0.75f);
+    public Color playerTwoTrailColor = new Color(0.45f, 0.65f, 1f, 0.75f);
+
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
     // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per BFS berechnet.
@@ -36,6 +41,7 @@ public class labyrinthGenerator : MonoBehaviour
 
     private Node[,] grid; // 2D-Array zur Speicherung
     private Dictionary<Vector2Int, Node> nodeLookup = new(); // Schnelle Abfrage
+    private Sprite trailSprite;
 
     // Richtungen für DFS: 2er-Schritte (oben, rechts, unten, links)
     private static readonly Vector2Int[] Directions = new Vector2Int[]
@@ -315,7 +321,8 @@ public class labyrinthGenerator : MonoBehaviour
     {
         Vector3 basePos = GetWorldPosition(StartNode);
 
-        Color[] colors = new Color[] { Color.red, Color.blue };
+        Color[] playerColors = new Color[] { Color.red, Color.blue };
+        Color[] trailColors = new Color[] { playerOneTrailColor, playerTwoTrailColor };
 
         for (int i = 0; i < 2; i++)
         {
@@ -338,6 +345,7 @@ public class labyrinthGenerator : MonoBehaviour
                 pc = player.AddComponent<PlayerController>();
 
             pc.SetGenerator(this);
+            pc.SetTrailLane(i);
 
             // Assign algorithm and visual properties after components are added so Awake() won't override them
             switch (i)
@@ -350,9 +358,61 @@ public class labyrinthGenerator : MonoBehaviour
                     break;
             }
 
-            sr.color = colors[i];
+            sr.color = playerColors[i];
+            pc.SetTrailColor(trailColors[i]);
             player.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
         }
+    }
+
+    public void PlaceTrailMarker(Node previousNode, Node node, Color color, int laneIndex, Vector2Int direction)
+    {
+        if (!enablePlayerTrails || node == null)
+            return;
+
+        GameObject marker = new GameObject($"TrailMarker_{laneIndex}_{node.position.x}_{node.position.y}");
+        marker.transform.SetParent(transform, true);
+        Vector3 basePosition = previousNode == null
+            ? GetWorldPosition(node)
+            : (GetWorldPosition(previousNode) + GetWorldPosition(node)) * 0.5f;
+        marker.transform.position = basePosition + GetTrailOffset(laneIndex, direction);
+
+        bool horizontalMove = Mathf.Abs(direction.x) >= Mathf.Abs(direction.y);
+        marker.transform.localScale = direction == Vector2Int.zero
+            ? new Vector3(tileSize.x * 0.28f, tileSize.y * 0.28f, 1f)
+            : (horizontalMove
+                ? new Vector3(tileSize.x * 0.92f, tileSize.y * 0.28f, 1f)
+                : new Vector3(tileSize.x * 0.28f, tileSize.y * 0.92f, 1f));
+
+        if (direction != Vector2Int.zero)
+            marker.transform.rotation = Quaternion.FromToRotation(Vector3.up, new Vector3(direction.x, direction.y, 0f));
+
+        SpriteRenderer sr = marker.AddComponent<SpriteRenderer>();
+        sr.sprite = GetTrailSprite();
+        sr.color = color;
+        sr.sortingOrder = 2;
+    }
+
+    private Vector3 GetTrailOffset(int laneIndex, Vector2Int direction)
+    {
+        Vector2 perpendicular = new Vector2(-direction.y, direction.x);
+        if (perpendicular == Vector2.zero)
+            perpendicular = laneIndex % 2 == 0 ? Vector2.left : Vector2.right;
+
+        perpendicular.Normalize();
+        float laneSide = laneIndex % 2 == 0 ? -1f : 1f;
+        return new Vector3(perpendicular.x * tileSize.x * 0.18f * laneSide, perpendicular.y * tileSize.y * 0.18f * laneSide, -0.05f);
+    }
+
+    private Sprite GetTrailSprite()
+    {
+        if (trailSprite != null)
+            return trailSprite;
+
+        Texture2D tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, Color.white);
+        tex.Apply();
+        trailSprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+        return trailSprite;
     }
 
     

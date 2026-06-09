@@ -7,14 +7,28 @@ using System.Collections.Generic;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private labyrinthGenerator generator;
-    public float moveSpeed = 20f;
+    public float moveSpeed = 300f;
     public enum PathfindingAlgorithm { Dijkstra, AStar, BFS }
     public PathfindingAlgorithm algorithm = PathfindingAlgorithm.AStar;
 
     private Pathfinder pathfinder;
+    private int trailLane;
+    private Color trailColor = Color.white;
+    private HashSet<Vector2Int> markedCells = new HashSet<Vector2Int>();
+    private Node lastTrailNode;
 
     public void SetGenerator(labyrinthGenerator gen) {
         generator = gen;
+    }
+
+    public void SetTrailLane(int lane)
+    {
+        trailLane = lane;
+    }
+
+    public void SetTrailColor(Color color)
+    {
+        trailColor = color;
     }
 
     private void Awake()
@@ -71,6 +85,8 @@ public class PlayerController : MonoBehaviour
 
         Debug.Log($"Pfad gefunden: {path.Count} Schritte");
         transform.position = generator.GetWorldPosition(generator.StartNode);
+        MarkTrail(generator.StartNode, generator.StartNode);
+        lastTrailNode = generator.StartNode;
 
         yield return StartCoroutine(MoveAlongPath(path));
         Debug.Log("Ziel erreicht!");
@@ -80,7 +96,8 @@ public class PlayerController : MonoBehaviour
     {
         while (path.Count > 0)
         {
-            Vector3 target = generator.GetWorldPosition(path.Pop());
+            Node nextNode = path.Pop();
+            Vector3 target = generator.GetWorldPosition(nextNode);
 
             while (Vector3.Distance(transform.position, target) > 0.01f)
             {
@@ -89,6 +106,23 @@ public class PlayerController : MonoBehaviour
             }
 
             transform.position = target;
+            MarkTrail(nextNode, lastTrailNode);
+            lastTrailNode = nextNode;
         }
+    }
+
+    private void MarkTrail(Node node, Node previousNode)
+    {
+        if (generator == null || node == null)
+            return;
+
+        if (!markedCells.Add(node.position))
+            return;
+
+        Vector2Int direction = Vector2Int.zero;
+        if (previousNode != null)
+            direction = node.position - previousNode.position;
+
+        generator.PlaceTrailMarker(previousNode, node, trailColor, trailLane, direction);
     }
 }
