@@ -12,7 +12,7 @@ public class labyrinthGenerator : MonoBehaviour
     public Vector2 tileOffset = Vector2.zero;
     // Number of additional paths to carve through the maze (0 = single path, higher = more paths)
     // Loops created here let Dijkstra and BFS diverge onto different routes.
-    public int additionalPaths = 8;
+    public int additionalPaths = 40;
 
     [Header("Player")]
     public GameObject playerPrefab;
@@ -151,7 +151,7 @@ public class labyrinthGenerator : MonoBehaviour
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
                 grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 4); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
-                // grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
+                grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
             }
