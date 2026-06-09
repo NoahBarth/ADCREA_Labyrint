@@ -143,9 +143,9 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
-                grid[wallPos.x, wallPos.y].weight = Random.Range(1, 4); // Betretungskosten für Dijkstra
+                grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 4); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
-                grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
+                // grid[nextPos.x, nextPos.y].weight = Random.Range(1, 4);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
             }
@@ -283,7 +283,7 @@ public class labyrinthGenerator : MonoBehaviour
             pathfinder = gameObject.AddComponent<Pathfinder>();
 
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
-        Stack<Node> bfsPath = pathfinder.FindPathBFS(StartNode, GoalNode, this, out _);
+        Stack<Node> bfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
 
         // BFS zuerst färben, Dijkstra danach -> auf gemeinsamen Feldern bleibt der
         // Dijkstra-Weg sichtbar; wo sie sich unterscheiden, sieht man beide Farben.

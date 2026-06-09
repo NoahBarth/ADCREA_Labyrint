@@ -165,30 +165,30 @@ public class Pathfinder : MonoBehaviour
     /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
     /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
   
-    public Stack<Node> FindPathBFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
+    public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
         deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
         if (start == null || goal == null || generator == null)
         {
-            Debug.LogError("BFS: Start, Goal oder Generator ist null!");
+            Debug.LogError("DFS: Start, Goal oder Generator ist null!");
             return finalPath;
         }
 
         HashSet<Node> visited = new HashSet<Node>();
         Dictionary<Node, Node> cameFrom = new Dictionary<Node, Node>();
-        Queue<Node> queue = new Queue<Node>();
+        Stack<Node> stack = new Stack<Node>();
 
-        queue.Enqueue(start);
+        stack.Push(start);
         visited.Add(start);
         cameFrom[start] = null;
 
         bool found = false;
 
-        while (queue.Count > 0)
+        while (stack.Count > 0)
         {
-            Node current = queue.Dequeue();
+            Node current = stack.Pop();
 
             if (current == goal)
             {
@@ -201,9 +201,8 @@ public class Pathfinder : MonoBehaviour
                 if (!visited.Contains(neighbor))
                 {
                     visited.Add(neighbor);
-                    neighbor.color = Color.yellow; // Optional: Markiere besuchte Knoten visuell
                     cameFrom[neighbor] = current;
-                    queue.Enqueue(neighbor);
+                    stack.Push(neighbor);
                 }
             }
         }

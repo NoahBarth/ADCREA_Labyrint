@@ -56,7 +56,7 @@ public class PlayerController : MonoBehaviour
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
                 break;
             case PathfindingAlgorithm.BFS:
-                path = pathfinder.FindPathBFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
+                path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
                 break;
             default:
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
