@@ -22,12 +22,15 @@ public class PlayerController : MonoBehaviour
     public bool waitForRelease = false;
     private bool released = false;
 
+    private Stack<Node> assignedPath;
+
     public void Release()
     {
         released = true;
     }
 
-    public void SetGenerator(labyrinthGenerator gen) {
+    public void SetGenerator(labyrinthGenerator gen)
+    {
         generator = gen;
     }
 
@@ -40,6 +43,12 @@ public class PlayerController : MonoBehaviour
     {
         trailColor = color;
     }
+
+    public void SetPath(Stack<Node> path)
+    {
+        assignedPath = new Stack<Node>(path);
+    }
+
 
     private void Awake()
     {
@@ -71,33 +80,15 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
 
-        Stack<Node> path;
         List<Node> deadEnds = new List<Node>();
 
-        switch (algorithm)
-        {
-            case PathfindingAlgorithm.Dijkstra:
-                path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
-                Debug.Log($"Dijkstra Pfad gefunden: {path.Count} Schritte");
-                break;
-            case PathfindingAlgorithm.AStar:
-                path = pathfinder.FindPathAStar(generator.StartNode, generator.GoalNode, generator);
-                Debug.Log($"A* Pfad gefunden: {path.Count} Schritte");
-                break;
-            case PathfindingAlgorithm.DFS:
-                path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
-                Debug.Log($"DFS Pfad gefunden: {path.Count} Schritte");
-                break;
-            default:
-                path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
-                break;
-        }
+        Stack<Node> path = assignedPath;
 
         if (path == null || path.Count == 0)
         {
             Debug.LogError("PlayerController: Kein Pfad gefunden!");
             yield break;
-        }        
+        }
         transform.position = generator.GetWorldPosition(generator.StartNode);
         MarkTrail(generator.StartNode, generator.StartNode);
         lastTrailNode = generator.StartNode;

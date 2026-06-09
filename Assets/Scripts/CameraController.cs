@@ -8,7 +8,6 @@ public class CameraController : MonoBehaviour
     [SerializeField] private Transform labyrinthRoot;
     [SerializeField] private bool autoFitOnStart = true;
     [SerializeField] private Vector2 padding = new Vector2(1f, 1f);
-    public TextMeshProUGUI ColorLegend;
 
     private void Start()
     {

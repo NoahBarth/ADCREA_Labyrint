@@ -48,7 +48,6 @@ public class Pathfinder : MonoBehaviour
             {
                 if (closedSet.Contains(neighbor))
                 {
-                    neighbor.color = Color.yellow; // Bereits verarbeitet (geschlossen)
                     continue;
                 }
 

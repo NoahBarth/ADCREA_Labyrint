@@ -27,7 +27,6 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
     private Pathfinder pathfinder;
-    public bool visualizeAlgorithmSteps = false; // Wenn true, werden die Schritte der Algorithmen animiert dargestellt
     // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per BFS berechnet.
     public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
     public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
@@ -35,7 +34,7 @@ public class labyrinthGenerator : MonoBehaviour
 
     public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
     [Tooltip("Wie viele Kacheln pro Schritt eingefärbt werden. Höher = schneller. Min. 1.")]
-    public int pathTilesPerFrame =999;
+    public int pathTilesPerFrame = 999;
 
     [Header("Sackgassen-Visualisierung")]
     // Wenn aktiv, werden nach der Generierung alle echte Sackgassen rot eingefärbt:
@@ -161,9 +160,7 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
-                grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 20); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
-                grid[nextPos.x, nextPos.y].hCost = Vector2Int.Distance(nextPos, new Vector2Int(width - 1, height - 1)); // Heuristik für A*
                 grid[nextPos.x, nextPos.y].weight = Random.Range(1, 20);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
@@ -209,9 +206,6 @@ public class labyrinthGenerator : MonoBehaviour
                     Debug.Log($"Additional path {pathsCarved} carved at ({randomX}, {randomY})");
                 }
             }
-        }
-        {
-            // zufällige Wand öffnen
         }
 
         Debug.Log($"Carved {pathsCarved} additional paths for multiple solutions");
@@ -298,7 +292,7 @@ public class labyrinthGenerator : MonoBehaviour
     /// Färbt den Dijkstra-Weg und den BFS-Weg in den im Inspector gewählten Farben ein.
     /// Das sind genau die Wege, die die beiden Spieler ablaufen.
     /// </summary>
-     private IEnumerator RunPathVisualization()
+    private IEnumerator RunPathVisualization()
     {
 
         Pathfinder pathfinder = GetComponent<Pathfinder>();
@@ -307,6 +301,16 @@ public class labyrinthGenerator : MonoBehaviour
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
         Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
         Stack<Node> aStarPath = pathfinder.FindPathAStar(StartNode, GoalNode, this);
+
+        // Pfade den Spielern geben
+        spawnedPlayers[PlayerController.PathfindingAlgorithm.Dijkstra]
+            .SetPath(new Stack<Node>(dijkstraPath));
+
+        spawnedPlayers[PlayerController.PathfindingAlgorithm.AStar]
+            .SetPath(new Stack<Node>(aStarPath));
+
+        spawnedPlayers[PlayerController.PathfindingAlgorithm.DFS]
+            .SetPath(new Stack<Node>(dfsPath));
 
         // Pro Algorithmus: erst den Weg einfärben, dann den zugehörigen Spieler starten.
         // Reihenfolge: DFS -> A* -> Dijkstra.
@@ -523,7 +527,7 @@ public class labyrinthGenerator : MonoBehaviour
                 // Apply tile size as local scale so prefabs fit the grid
                 tile.transform.localScale = new Vector3(tileSize.x, tileSize.y, 1f);
 
-                bool blockPlayer = tile.GetComponent<TileData>()?.isWall ?? (node.type == TileType.Wall);
+                bool blockPlayer = node.type == TileType.Wall;
                 if (blockPlayer)
                 {
                     wallCount++;
