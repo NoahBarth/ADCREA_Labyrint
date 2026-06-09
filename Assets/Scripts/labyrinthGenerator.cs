@@ -297,15 +297,6 @@ public class labyrinthGenerator : MonoBehaviour
         Pathfinder pathfinder = GetComponent<Pathfinder>();
         if (pathfinder == null)
             pathfinder = gameObject.AddComponent<Pathfinder>();
-        // if (visualizeAlgorithmSteps)
-        // {
-        // StartCoroutine(pathfinder.VisualizeDijkstra(StartNode, GoalNode, this));
-        // StartCoroutine(pathfinder.VisualizeAStar(StartNode, GoalNode, this));
-        // StartCoroutine(pathfinder.VisualizeDFS(StartNode, GoalNode, this));
-        //     return;
-        // }
-
-
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
         Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
         Stack<Node> aStarPath = pathfinder.FindPathAStar(StartNode, GoalNode, this);
