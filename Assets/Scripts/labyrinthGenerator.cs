@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public class labyrinthGenerator : MonoBehaviour
@@ -31,6 +32,8 @@ public class labyrinthGenerator : MonoBehaviour
     public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
     public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // BFS-Weg
     public Color aStarPathColor = new Color(0.6f, 0.7f, 1f);   // AStar-Weg
+
+    public float pathStepDelay = 0.05f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
 
     [Header("Sackgassen-Visualisierung")]
     // Wenn aktiv, werden nach der Generierung alle echten Sackgassen rot eingefärbt:
@@ -92,7 +95,7 @@ public class labyrinthGenerator : MonoBehaviour
         VisualizeLabyrinth();
         ColorWeights();
         if (visualizePath)
-            RunPathVisualization();
+            StartCoroutine(RunPathVisualization());
         IsReady = true;
         if (visualizeDeadEnds)
         {
@@ -291,7 +294,7 @@ public class labyrinthGenerator : MonoBehaviour
     /// Färbt den Dijkstra-Weg und den BFS-Weg in den im Inspector gewählten Farben ein.
     /// Das sind genau die Wege, die die beiden Spieler ablaufen.
     /// </summary>
-    private void RunPathVisualization()
+     private IEnumerator RunPathVisualization()
     {
 
         Pathfinder pathfinder = GetComponent<Pathfinder>();
@@ -304,13 +307,29 @@ public class labyrinthGenerator : MonoBehaviour
         // BFS zuerst färben, Dijkstra danach -> auf gemeinsamen Feldern bleibt der
         // Dijkstra-Weg sichtbar; wo sie sich unterscheiden, sieht man beide Farben.
         foreach (Node n in dfsPath)
+        {
             TintNode(n, dfsPathColor);
+            yield return PathStepWait();
+        }
         foreach (Node n in dijkstraPath)
+        {
             TintNode(n, dijkstraPathColor);
+            yield return PathStepWait();
+        }
         foreach (Node n in aStarPath)
+        {
             TintNode(n, aStarPathColor);
+            yield return PathStepWait();
+        }
 
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, BFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
+    }
+
+    private object PathStepWait()
+    {
+        if (pathStepDelay > 0f)
+            return new WaitForSeconds(pathStepDelay);
+        return null;
     }
 
     public void TintNode(Node node, Color color)

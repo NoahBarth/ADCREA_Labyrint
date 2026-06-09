@@ -68,15 +68,15 @@ public class PlayerController : MonoBehaviour
         {
             case PathfindingAlgorithm.Dijkstra:
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
-                Debug.Log($"Dijkstra-Pfad gefunden: {path.Count} Schritte");
+                Debug.Log($"Dijkstra Pfad gefunden: {path.Count} Schritte");
                 break;
             case PathfindingAlgorithm.AStar:
                 path = pathfinder.FindPathAStar(generator.StartNode, generator.GoalNode, generator);
-                Debug.Log($"AStar-Pfad gefunden: {path.Count} Schritte");
+                Debug.Log($"A* Pfad gefunden: {path.Count} Schritte");
                 break;
             case PathfindingAlgorithm.DFS:
                 path = pathfinder.FindPathDFS(generator.StartNode, generator.GoalNode, generator, out deadEnds);
-                Debug.Log($"DFS-Pfad gefunden: {path.Count} Schritte");
+                Debug.Log($"DFS Pfad gefunden: {path.Count} Schritte");
                 break;
             default:
                 path = pathfinder.FindPathDijkstra(generator.StartNode, generator.GoalNode, generator);
