@@ -61,6 +61,7 @@ public class labyrinthGenerator : MonoBehaviour
 
     private void Start()
     {
+        pathfinder = GetComponent<Pathfinder>();
         // Validierung: Prefabs müssen zugewiesen sein
         if (wallPrefab == null || floorPrefab == null)
         {
@@ -156,7 +157,9 @@ public class labyrinthGenerator : MonoBehaviour
                 Vector2Int wallPos = currentNode.position + ((nextPos - currentNode.position) / 2);
 
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
+                grid[wallPos.x, wallPos.y].gCost = Random.Range(1, 20); // Betretungskosten für Dijkstra
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
+                grid[nextPos.x, nextPos.y].hCost = Vector2Int.Distance(nextPos, new Vector2Int(width - 1, height - 1)); // Heuristik für A*
                 grid[nextPos.x, nextPos.y].weight = Random.Range(1, 20);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
@@ -203,6 +206,10 @@ public class labyrinthGenerator : MonoBehaviour
                 }
             }
         }
+        {
+            // zufällige Wand öffnen
+        }
+
         Debug.Log($"Carved {pathsCarved} additional paths for multiple solutions");
     }
 
@@ -371,19 +378,19 @@ public class labyrinthGenerator : MonoBehaviour
             pc.SetGenerator(this);
             pc.SetTrailLane(i);
 
-            // // Assign algorithm and visual properties after components are added so Awake() won't override them
-            // switch (i)
-            // {
-            //     case 0:
-            //         pc.algorithm = PlayerController.PathfindingAlgorithm.Dijkstra;
-            //         break;
-            //     case 1:
-            //         pc.algorithm = PlayerController.PathfindingAlgorithm.AStar;
-            //         break;
-            //     case 2:
-            //         pc.algorithm = PlayerController.PathfindingAlgorithm.DFS;
-            //         break;
-            // }
+            // Assign algorithm and visual properties after components are added so Awake() won't override them
+            switch (i)
+            {
+                case 0:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.Dijkstra;
+                    break;
+                case 1:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.AStar;
+                    break;
+                case 2:
+                    pc.algorithm = PlayerController.PathfindingAlgorithm.DFS;
+                    break;
+            }
 
             sr.color = playerColors[i];
             pc.SetTrailColor(trailColors[i]);
