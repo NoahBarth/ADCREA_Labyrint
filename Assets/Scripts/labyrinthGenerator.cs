@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class labyrinthGenerator : MonoBehaviour
 {
@@ -61,6 +62,8 @@ public class labyrinthGenerator : MonoBehaviour
         new Vector2Int(0, -2),   // Unten
         new Vector2Int(-2, 0)    // Links
     };
+
+    public TextMeshProUGUI logText;
 
     private void Start()
     {
@@ -324,6 +327,7 @@ public class labyrinthGenerator : MonoBehaviour
         ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
 
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, DFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
+        logText.text += $"Dijkstra-Weg: {dijkstraPath.Count} Felder\nDFS-Weg: {dfsPath.Count} Felder\nAStar-Weg: {aStarPath.Count} Felder";
     }
 
     // Gibt den Spieler mit dem angegebenen Algorithmus zum Loslaufen frei.

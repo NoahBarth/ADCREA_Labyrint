@@ -1,10 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
+using TMPro;
 
 public class Pathfinder : MonoBehaviour
 {
     /// Dijkstra-Algorithmus zur Pfadfindung
+    /// 
+    
     public Stack<Node> FindPathDijkstra(Node start, Node goal, labyrinthGenerator generator) //geringsten Gesamtkosten gCost
     {
         if (start == null || goal == null || generator == null)
@@ -12,7 +14,7 @@ public class Pathfinder : MonoBehaviour
             Debug.LogError("Start, Goal oder Generator ist null!");
             return new Stack<Node>();
         }
-        int visitedNodes = 0;
+        int visitedDijkstraNodes = 0;
 
         List<Node> allNodes = generator.GetFloorNodes();
         HashSet<Node> closedSet = new HashSet<Node>(); // Verarbeitete Knoten
@@ -35,7 +37,7 @@ public class Pathfinder : MonoBehaviour
             openList.Sort((a, b) => a.gCost.CompareTo(b.gCost));
             Node current = openList[0];
             openList.RemoveAt(0);
-            visitedNodes++;
+            visitedDijkstraNodes++;
 
             if (current == goal)//geringste Kosten wird genommen
             {
@@ -70,7 +72,8 @@ public class Pathfinder : MonoBehaviour
 
         // FEHLER BEHOBEN: Backtracking-Logik in die Methode verlegt
         Stack<Node> finalStack = BacktrackPath(goal);
-        Debug.Log($"Dijkstra: {visitedNodes} Knoten untersucht");
+        Debug.Log($"Dijkstra: {visitedDijkstraNodes} Knoten untersucht");
+        generator.logText.text += $"Dijkstra: {visitedDijkstraNodes} Knoten untersucht\n";
         return finalStack;
     }
 
@@ -103,7 +106,7 @@ public class Pathfinder : MonoBehaviour
 
     public Stack<Node> FindPathAStar(Node start, Node goal, labyrinthGenerator generator)
     {
-        int visitedNodes = 0;
+        int visitedAStarNodes = 0;
         if (start == null || goal == null || generator == null)
         {
             Debug.LogError("Start, Goal oder Generator ist null!");
@@ -133,7 +136,7 @@ public class Pathfinder : MonoBehaviour
             );
             Node current = openList[0];
             openList.RemoveAt(0);
-            visitedNodes++;
+            visitedAStarNodes++;
 
             if (current == goal)//wenn ziel erreicht
             {
@@ -162,7 +165,8 @@ public class Pathfinder : MonoBehaviour
                 }
             }
         }
-        Debug.Log($"A*: {visitedNodes} Knoten untersucht");
+        Debug.Log($"A*: {visitedAStarNodes} Knoten untersucht");
+        generator.logText.text += $"A*: {visitedAStarNodes} Knoten untersucht\n";
         return BacktrackPath(goal);
     }
 
@@ -176,7 +180,7 @@ public class Pathfinder : MonoBehaviour
 
     public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
-        int visitedNodes = 0;
+        int visitedDFSNodes = 0;
         deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
@@ -199,7 +203,7 @@ public class Pathfinder : MonoBehaviour
         while (stack.Count > 0)
         {
             Node current = stack.Pop();
-            visitedNodes++;
+            visitedDFSNodes++;
 
             if (current == goal)
             {
@@ -240,7 +244,8 @@ public class Pathfinder : MonoBehaviour
             if (!pathSet.Contains(n))
                 deadEndNodes.Add(n);
         }
-        Debug.Log($"DFS: {visitedNodes} Knoten untersucht");
+        Debug.Log($"DFS: {visitedDFSNodes} Knoten untersucht");
+        generator.logText.text += $"DFS: {visitedDFSNodes} Knoten untersucht\n";
         return finalPath;
     }
 
