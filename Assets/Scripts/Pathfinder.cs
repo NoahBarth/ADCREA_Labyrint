@@ -34,7 +34,9 @@ public class Pathfinder : MonoBehaviour
         while (openList.Count > 0) // Solange es Knoten gibt, die noch untersucht werden müssen
         {
 
-            openList.Sort((a, b) => a.gCost.CompareTo(b.gCost));
+            // Sortiert ohne Lambda über Node.CompareTo (vergleicht nach fCost).
+            // Bei Dijkstra ist hCost = 0, also wird effektiv nach gCost sortiert.
+            openList.Sort();
             Node current = openList[0];
             openList.RemoveAt(0);
             visitedDijkstraNodes++;
@@ -131,9 +133,8 @@ public class Pathfinder : MonoBehaviour
         while (openList.Count > 0)
         {
             //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
-            openList.Sort((a, b) =>
-                (a.gCost + a.hCost).CompareTo(b.gCost + b.hCost)
-            );
+            // Sortiert ohne Lambda über Node.CompareTo, das genau nach fCost = gCost + hCost vergleicht.
+            openList.Sort();
             Node current = openList[0];
             openList.RemoveAt(0);
             visitedAStarNodes++;

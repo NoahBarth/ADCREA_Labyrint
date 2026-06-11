@@ -21,7 +21,12 @@ public class CameraController : MonoBehaviour
     {
         if (labyrinthRoot == null)
         {
-            labyrinthRoot = FindAnyObjectByType<labyrinthGenerator>()?.transform;
+            // Ohne Null-Conditional-Operator (?.): erst suchen, dann auf null prüfen.
+            labyrinthGenerator generator = FindAnyObjectByType<labyrinthGenerator>();
+            if (generator != null)
+            {
+                labyrinthRoot = generator.transform;
+            }
         }
 
         if (labyrinthRoot == null)

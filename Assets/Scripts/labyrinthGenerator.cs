@@ -439,17 +439,36 @@ public class labyrinthGenerator : MonoBehaviour
 
         GameObject marker = new GameObject($"TrailMarker_{laneIndex}_{node.position.x}_{node.position.y}");
         marker.transform.SetParent(transform, true);
-        Vector3 basePosition = previousNode == null
-            ? GetWorldPosition(node)
-            : (GetWorldPosition(previousNode) + GetWorldPosition(node)) * 0.5f;
+        // Erster Marker (kein Vorgänger) sitzt auf dem Feld selbst, sonst mittig
+        // zwischen Vorgänger und aktuellem Feld. Ohne Ternary als if/else.
+        Vector3 basePosition;
+        if (previousNode == null)
+        {
+            basePosition = GetWorldPosition(node);
+        }
+        else
+        {
+            basePosition = (GetWorldPosition(previousNode) + GetWorldPosition(node)) * 0.5f;
+        }
         marker.transform.position = basePosition + GetTrailOffset(laneIndex, direction);
 
+        // Form des Markers je nach Bewegungsrichtung (ohne Ternary als if/else):
         bool horizontalMove = Mathf.Abs(direction.x) >= Mathf.Abs(direction.y);
-        marker.transform.localScale = direction == Vector2Int.zero
-            ? new Vector3(tileSize.x * 0.28f, tileSize.y * 0.28f, 1f)
-            : (horizontalMove
-                ? new Vector3(tileSize.x * 0.92f, tileSize.y * 0.28f, 1f)
-                : new Vector3(tileSize.x * 0.28f, tileSize.y * 0.92f, 1f));
+        if (direction == Vector2Int.zero)
+        {
+            // Startfeld ohne Richtung -> kleines Quadrat
+            marker.transform.localScale = new Vector3(tileSize.x * 0.28f, tileSize.y * 0.28f, 1f);
+        }
+        else if (horizontalMove)
+        {
+            // Horizontale Bewegung -> breiter, flacher Balken
+            marker.transform.localScale = new Vector3(tileSize.x * 0.92f, tileSize.y * 0.28f, 1f);
+        }
+        else
+        {
+            // Vertikale Bewegung -> schmaler, hoher Balken
+            marker.transform.localScale = new Vector3(tileSize.x * 0.28f, tileSize.y * 0.92f, 1f);
+        }
 
         if (direction != Vector2Int.zero)
             marker.transform.rotation = Quaternion.FromToRotation(Vector3.up, new Vector3(direction.x, direction.y, 0f));
@@ -464,10 +483,26 @@ public class labyrinthGenerator : MonoBehaviour
     {
         Vector2 perpendicular = new Vector2(-direction.y, direction.x);
         if (perpendicular == Vector2.zero)
-            perpendicular = laneIndex % 2 == 0 ? Vector2.left : Vector2.right;
+        {
+            // Ohne Richtung: feste Achse abhängig von der Spur (ohne Ternary).
+            if (laneIndex % 2 == 0)
+            {
+                perpendicular = Vector2.left;
+            }
+            else
+            {
+                perpendicular = Vector2.right;
+            }
+        }
 
         perpendicular.Normalize();
-        float laneSide = laneIndex % 2 == 0 ? -1f : 1f;
+
+        // Spuren wechseln sich links/rechts der Wegmitte ab (ohne Ternary).
+        float laneSide = 1f;
+        if (laneIndex % 2 == 0)
+        {
+            laneSide = -1f;
+        }
         return new Vector3(perpendicular.x * tileSize.x * 0.18f * laneSide, perpendicular.y * tileSize.y * 0.18f * laneSide, -0.05f);
     }
 
