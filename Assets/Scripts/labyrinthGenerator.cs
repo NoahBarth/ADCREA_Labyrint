@@ -19,12 +19,6 @@ public class labyrinthGenerator : MonoBehaviour
     [Header("Player")]
     public GameObject playerPrefab;
 
-    [Header("Player Trails")]
-    public bool enablePlayerTrails = true;
-    public Color playerOneTrailColor = new Color(1f, 0.45f, 0.45f, 0.75f);
-    public Color playerTwoTrailColor = new Color(0.45f, 0.65f, 1f, 0.75f);
-    public Color playerThreeTrailColor = new Color(0.6f, 1f, 0.45f, 0.75f);
-
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
     private Pathfinder pathfinder;
@@ -40,8 +34,6 @@ public class labyrinthGenerator : MonoBehaviour
     public Node StartNode { get; private set; }
     public Node GoalNode { get; private set; }
     public bool IsReady { get; private set; }
-
-    private Sprite trailSprite;
     private readonly Dictionary<PlayerController.PathfindingAlgorithm, PlayerController> spawnedPlayers = new(); // Gespawnte Spieler nach Algorithmus, um sie nach ihrer Pfad-Einfärbung freizugeben.
 
     // Richtungen für DFS: 2er-Schritte (oben, rechts, unten, links) um sicherzustellen, dass zwischen den Pfaden immer eine Wand bleibt, die wir entfernen können.
@@ -350,7 +342,7 @@ public class labyrinthGenerator : MonoBehaviour
     }
 
 
-    // Hilfsmethode, um die Weltposition einer Node zu berechnen, basierend auf ihrer Position im Grid, der Kachelgröße und dem Offset. Dadurch können die Spieler und Trail-Marker korrekt auf den Kacheln positioniert werden.
+    // Hilfsmethode, um die Weltposition einer Node zu berechnen, basierend auf ihrer Position im Grid, der Kachelgröße und dem Offset. Dadurch können die Spieler korrekt auf den Kacheln positioniert werden.
     public Vector3 GetWorldPosition(Node node)
     {
         return new Vector3(
@@ -365,7 +357,6 @@ public class labyrinthGenerator : MonoBehaviour
         Vector3 basePos = GetWorldPosition(StartNode);
 
         Color[] playerColors = new Color[] { Color.red, Color.blue, Color.green };
-        Color[] trailColors = new Color[] { playerOneTrailColor, playerTwoTrailColor, playerThreeTrailColor };
 
         for (int i = 0; i < 3; i++)
         {
@@ -437,7 +428,7 @@ public class labyrinthGenerator : MonoBehaviour
         return pos.x > 0 && pos.x < width - 1 && pos.y > 0 && pos.y < height - 1;
     }
 
-// Visualisiert das Labyrint via Instanziierung von Boden- und Wand-Prefabs entsprechend der Informationen in den Nodes.
+    // Visualisiert das Labyrint via Instanziierung von Boden- und Wand-Prefabs entsprechend der Informationen in den Nodes.
     private void VisualizeLabyrinth()
     {
         int wallCount = 0, floorCount = 0;
@@ -457,14 +448,13 @@ public class labyrinthGenerator : MonoBehaviour
                 float py = y * tileSize.y + tileOffset.y;
                 Vector3 position = new Vector3(px, py, 0f);
 
-// 
+                // 
                 GameObject tile = Instantiate(prefab, position, Quaternion.identity, transform);
                 tile.name = $"Tile_{x}_{y}_{node.type}";
                 node.visual = tile;
 
                 // Tile wird auf tileSize skaliert
                 tile.transform.localScale = new Vector3(tileSize.x, tileSize.y, 1f);
-                // 
                 bool blockPlayer = node.type == TileType.Wall;
                 if (blockPlayer)
                 {
@@ -491,7 +481,7 @@ public class labyrinthGenerator : MonoBehaviour
         }
     }
 
-// Gibt eine Farbe zurück, die die Betretungskosten einer Kachel repräsentiert. Niedrigere Kosten = hellere Farbe, höhere Kosten = dunklere Farbe.
+    // Gibt eine Farbe zurück, die die Betretungskosten einer Kachel repräsentiert. Niedrigere Kosten = hellere Farbe, höhere Kosten = dunklere Farbe.
     private Color GetWeightColor(float weight)
     {
         if (weight <= 5)

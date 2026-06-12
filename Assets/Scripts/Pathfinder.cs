@@ -4,9 +4,7 @@ using TMPro;
 
 public class Pathfinder : MonoBehaviour
 {
-    /// Dijkstra-Algorithmus zur Pfadfindung
-    /// 
-    
+    /// Dijkstra-Algorithmus zur Pfadfindung    
     public Stack<Node> FindPathDijkstra(Node start, Node goal, labyrinthGenerator generator) //geringsten Gesamtkosten gCost
     {
         if (start == null || goal == null || generator == null)
