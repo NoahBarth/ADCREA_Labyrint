@@ -608,7 +608,7 @@ MonoBehaviour:
   tileOffset: {x: 0, y: 0}
   additionalPaths: 100
   playerPrefab: {fileID: 5577414267896186894, guid: d581deffd5168448c8a8d9258cf28221, type: 3}
-  visualizePath: 0
+  visualizePath: 1
   dijkstraPathColor: {r: 1, g: 0.6, b: 0.6196549, a: 1}
   dfsPathColor: {r: 0.6, g: 1, b: 0.7305458, a: 1}
   aStarPathColor: {r: 0.6, g: 0.7, b: 1, a: 1}
