@@ -84,8 +84,9 @@ public class labyrinthGenerator : MonoBehaviour
         ColorWeights();
         IsReady = true;
         SpawnPlayers();
-        if (visualizePath)
-            StartCoroutine(RunPathVisualization());
+        StartCoroutine(CalculatePath());
+        // if (visualizePath)
+        //     StartCoroutine(RunPathVisualization());
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -151,6 +152,7 @@ public class labyrinthGenerator : MonoBehaviour
                 grid[wallPos.x, wallPos.y].type = TileType.Floor;
                 grid[nextPos.x, nextPos.y].type = TileType.Floor;
                 // Zufällige Gewichtung zwischen 1 und 20 für begehbare Knoten setzen, damit die Pfadfindungsalgorithmen unterschiedliche Wege bevorzugen.
+                grid[wallPos.x, wallPos.y].weight = Random.Range(1, 20);
                 grid[nextPos.x, nextPos.y].weight = Random.Range(1, 20);
 
                 stack.Push(grid[nextPos.x, nextPos.y]);
@@ -257,15 +259,15 @@ public class labyrinthGenerator : MonoBehaviour
         return floors;
     }
 
-    // Hilfsmethode, um die Pfad-Visualisierung zu starten. Berechnet die Pfade für alle drei Algorithmen, weist sie den Spielern zu und färbt sie nacheinander
-    private IEnumerator RunPathVisualization()
+    // Berechnet die Pfade für alle drei Algorithmen, weist sie den Spielern zu und färbt sie nacheinander ein, falls visualizePath aktiviert ist.
+    private IEnumerator CalculatePath()
     {
-
         Pathfinder pathfinder = GetComponent<Pathfinder>();
         if (pathfinder == null)
         {
             pathfinder = gameObject.AddComponent<Pathfinder>();
         }
+
         // Berechnet die Pfade für alle drei Algorithmen. Die Pfade werden als Stacks von Nodes zurückgegeben, damit die Spieler sie in der richtigen Reihenfolge ablaufen können.
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
         Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
@@ -281,20 +283,32 @@ public class labyrinthGenerator : MonoBehaviour
         spawnedPlayers[PlayerController.PathfindingAlgorithm.DFS]
             .SetPath(new Stack<Node>(dfsPath));
 
-        // Pro Algorithmus den Pfad Kachel für Kachel einfärben, mit optionaler Verzögerung zwischen den Schritten, damit man die Entwicklung des Pfades sehen kann.
-        yield return StartCoroutine(TintPath(dfsPath, dfsPathColor));
-        // Nachdem der Pfad eingefärbt ist, den entsprechenden Spieler freigeben, damit er loslaufen kann.
-        ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
-
-        yield return StartCoroutine(TintPath(aStarPath, aStarPathColor));
-        ReleasePlayer(PlayerController.PathfindingAlgorithm.AStar);
-
-        yield return StartCoroutine(TintPath(dijkstraPath, dijkstraPathColor));
+        if (visualizePath)
+        {
+            yield return StartCoroutine(RunPathVisualization(dijkstraPath, dfsPath, aStarPath));
+        }
+        // Release der Spieler erst nach der Pfad-Visualisierung, damit die Entwicklung des Pfades vollständig sichtbar ist, bevor sie sich bewegen.
         ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
-
+        ReleasePlayer(PlayerController.PathfindingAlgorithm.AStar);
+        ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, DFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
         // Die Anzahl der Felder in den Pfaden auch im UI-Text anzeigen.
         logText.text += $"Dijkstra-Weg: {dijkstraPath.Count} Felder\nDFS-Weg: {dfsPath.Count} Felder\nAStar-Weg: {aStarPath.Count} Felder";
+    }
+
+    // Hilfsmethode, um die Pfad-Visualisierung zu starten. 
+    private IEnumerator RunPathVisualization(Stack<Node> dijkstraPath = null, Stack<Node> dfsPath = null, Stack<Node> aStarPath = null)
+    {
+        // Pro Algorithmus den Pfad Kachel für Kachel einfärben, mit optionaler Verzögerung zwischen den Schritten, damit man die Entwicklung des Pfades sehen kann.
+        yield return StartCoroutine(TintPath(dfsPath, dfsPathColor));
+        // Nachdem der Pfad eingefärbt ist, den entsprechenden Spieler freigeben, damit er loslaufen kann.
+        // ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
+
+        yield return StartCoroutine(TintPath(aStarPath, aStarPathColor));
+        // ReleasePlayer(PlayerController.PathfindingAlgorithm.AStar);
+
+        yield return StartCoroutine(TintPath(dijkstraPath, dijkstraPathColor));
+        // ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
     }
 
 
@@ -401,7 +415,7 @@ public class labyrinthGenerator : MonoBehaviour
 
             // Bei aktiver Pfad-Visualisierung wartet der Spieler, bis seine Farbe
             // fertig gezeichnet ist; sonst läuft er sofort los.
-            pc.waitForRelease = visualizePath;
+            pc.waitForRelease = true;
             // Die Referenz zum Spieler in der spawnedPlayers-Dictionary speichern, damit wir ihn später freigeben können, wenn seine Pfad-Visualisierung abgeschlossen ist.
             spawnedPlayers[pc.algorithm] = pc;
         }

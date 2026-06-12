@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-[RequireComponent(typeof(Pathfinder))]
 [RequireComponent(typeof(SpriteRenderer))]
 public class PlayerController : MonoBehaviour
 {
@@ -14,8 +13,6 @@ public class PlayerController : MonoBehaviour
 
 
     public PathfindingAlgorithm algorithm = PathfindingAlgorithm.AStar;
-
-    private Pathfinder pathfinder;
 
     // Wenn true, wartet der Spieler mit dem Loslaufen, bis Release() aufgerufen wird.
     // Der Generator nutzt das, um den Spieler erst nach seiner Pfad-Einfärbung zu starten.
@@ -41,10 +38,7 @@ public class PlayerController : MonoBehaviour
 
 // vor start wird ein Objekt erzeugt, damit der Spieler eine Sichtbare darsteelung hat 
     private void Awake()
-    {
-        //der referenz holen
-        pathfinder = GetComponent<Pathfinder>();
-        
+    {        
         //falls kein sprite gesetzt  ist, wird ein weisser sprite erstellt. 
        
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
@@ -76,8 +70,6 @@ public class PlayerController : MonoBehaviour
             Debug.LogError("PlayerController: labyrinthGenerator nicht gefunden oder nicht bereit.");
             yield break;
         }
-
-        List<Node> deadEnds = new List<Node>();
 
         Stack<Node> path = assignedPath;
 

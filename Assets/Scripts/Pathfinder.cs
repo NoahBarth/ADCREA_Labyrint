@@ -72,7 +72,10 @@ public class Pathfinder : MonoBehaviour
 
         Stack<Node> finalStack = BacktrackPath(goal);
         Debug.Log($"Dijkstra: {visitedDijkstraNodes} Knoten untersucht");
-        generator.logText.text += $"Dijkstra: {visitedDijkstraNodes} Knoten untersucht\n";
+        if (generator.logText != null)
+        {
+            generator.logText.text += $"Dijkstra: {visitedDijkstraNodes} Knoten untersucht\n";
+        }
         return finalStack;
     }
 
@@ -163,7 +166,10 @@ public class Pathfinder : MonoBehaviour
             }
         }
         Debug.Log($"A*: {visitedAStarNodes} Knoten untersucht");
-        generator.logText.text += $"A*: {visitedAStarNodes} Knoten untersucht\n";
+        if (generator.logText != null)
+        {
+            generator.logText.text += $"A*: {visitedAStarNodes} Knoten untersucht\n";
+        }
         return BacktrackPath(goal);
     }
 
@@ -240,8 +246,10 @@ public class Pathfinder : MonoBehaviour
                 deadEndNodes.Add(n);
         }
         Debug.Log($"DFS: {visitedDFSNodes} Knoten untersucht");
-        generator.logText.text += $"DFS: {visitedDFSNodes} Knoten untersucht\n";
+        if (generator.logText != null)
+        {
+            generator.logText.text += $"DFS: {visitedDFSNodes} Knoten untersucht\n";
+        }
         return finalPath;
     }
-   
 }

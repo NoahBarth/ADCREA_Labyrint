@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using TMPro;
 
 // dieser Skript steuert die Kamera, um das Labyrinth optimal anzuzeigen. 
 // Es berechnet die Grenzen des Labyrinths und passt die Kamera entsprechend an, 
