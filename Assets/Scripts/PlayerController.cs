@@ -8,25 +8,25 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private labyrinthGenerator generator;
     public float moveSpeed = 300f;
+
+    // Auswahl des Pfadfindungsalgorithmus, der für diesen Spieler verwendet werden soll. Dijkstra und A* berücksichtigen die Gewichtung der Knoten, DFS ignoriert sie.
     public enum PathfindingAlgorithm { Dijkstra, AStar, DFS }
+
+
     public PathfindingAlgorithm algorithm = PathfindingAlgorithm.AStar;
 
     private Pathfinder pathfinder;
-    private int trailLane;
-    private Color trailColor = Color.white;
-    private HashSet<Vector2Int> markedCells = new HashSet<Vector2Int>();
-    private Node lastTrailNode;
 
     // Wenn true, wartet der Spieler mit dem Loslaufen, bis Release() aufgerufen wird.
     // Der Generator nutzt das, um den Spieler erst nach seiner Pfad-Einfärbung zu starten.
-    public bool waitForRelease = false;
+    public bool waitForRelease = false; //startsignal, wenn path fertig generiert, kann player loslaufen
     private bool released = false;
 
     private Stack<Node> assignedPath;
 
     public void Release()
     {
-        released = true;
+        released = true; // Startsignal für den Spieler, um loszulaufen, nachdem der Generator den Pfad eingefärbt hat.
     }
 
     public void SetGenerator(labyrinthGenerator gen)
@@ -34,26 +34,19 @@ public class PlayerController : MonoBehaviour
         generator = gen;
     }
 
-    public void SetTrailLane(int lane)
-    {
-        trailLane = lane;
-    }
-
-    public void SetTrailColor(Color color)
-    {
-        trailColor = color;
-    }
-
     public void SetPath(Stack<Node> path)
     {
         assignedPath = new Stack<Node>(path);
     }
 
-
+// vor start wird ein Objekt erzeugt, damit der Spieler eine Sichtbare darsteelung hat 
     private void Awake()
     {
+        //der referenz holen
         pathfinder = GetComponent<Pathfinder>();
-
+        
+        //falls kein sprite gesetzt  ist, wird ein weisser sprite erstellt. 
+       
         SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (sr.sprite == null)
         {
@@ -62,18 +55,22 @@ public class PlayerController : MonoBehaviour
             tex.Apply();
             sr.sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
         }
+        //standardfarbe auf rot, wird aber über inspector überschrieben 
         sr.color = Color.red;
         transform.localScale = new Vector3(0.8f, 0.8f, 1f);
     }
 
+// Labyrinthgenerator muss zuerst fertig sein, damit der player den pfad bekommt. 
     private IEnumerator Start()
     {
-        // Wait one frame so labyrinthGenerator.Start() has finished
-        yield return null;
 
+        yield return null; //wartet einen frame, damit andere Start()-Methode
+        
+        // kein Generator gesetzt = sucht in der Szene 
         if (generator == null)
             generator = FindAnyObjectByType<labyrinthGenerator>();
 
+        // immer noch nicht fertig, prozess abbrechen
         if (generator == null || !generator.IsReady)
         {
             Debug.LogError("PlayerController: labyrinthGenerator nicht gefunden oder nicht bereit.");
@@ -90,7 +87,6 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
         transform.position = generator.GetWorldPosition(generator.StartNode);
-        lastTrailNode = generator.StartNode;
 
         // Warten, bis der Generator diesen Spieler freigibt (nach seiner Pfad-Einfärbung).
         while (waitForRelease && !released)
@@ -100,6 +96,8 @@ public class PlayerController : MonoBehaviour
         Debug.Log("Ziel erreicht!");
     }
 
+
+//Laufanimation, die den Spieler entlang des zugewiesenen Pfads bewegt.
     private IEnumerator MoveAlongPath(Stack<Node> path)
     {
         while (path.Count > 0)
@@ -114,8 +112,6 @@ public class PlayerController : MonoBehaviour
             }
 
             transform.position = target;
-            lastTrailNode = nextNode;
         }
     }
-
 }

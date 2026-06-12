@@ -72,7 +72,6 @@ public class Pathfinder : MonoBehaviour
             }
         }
 
-        // FEHLER BEHOBEN: Backtracking-Logik in die Methode verlegt
         Stack<Node> finalStack = BacktrackPath(goal);
         Debug.Log($"Dijkstra: {visitedDijkstraNodes} Knoten untersucht");
         generator.logText.text += $"Dijkstra: {visitedDijkstraNodes} Knoten untersucht\n";
@@ -80,7 +79,7 @@ public class Pathfinder : MonoBehaviour
     }
 
 
-    /// Backtracking: Pfad vom Ziel zum Start zurückverfolgen und umkehren
+    /// Backtracking Pfad vom Ziel zum Start zurückverfolgen und umkehren damit wir den stack umkehren um in vorwärtsreihenfolge zu bekommmen
 
     private Stack<Node> BacktrackPath(Node goal)
     {
@@ -119,7 +118,7 @@ public class Pathfinder : MonoBehaviour
         HashSet<Node> closedSet = new HashSet<Node>();
         List<Node> openList = new List<Node>();
 
-        // Initialisierung
+        // Initialisierung der gCost
         foreach (Node node in allNodes)
         {
             node.gCost = float.MaxValue;
@@ -132,8 +131,7 @@ public class Pathfinder : MonoBehaviour
 
         while (openList.Count > 0)
         {
-            //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & openlist sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
-            // Sortiert ohne Lambda über Node.CompareTo, das genau nach fCost = gCost + hCost vergleicht.
+            //hauptschleife: Knoten mit niedrigsten fCost (gCost + hCost) wird ausgewählt & list sortiert, damit der Knoten mit den geringsten Kosten immer an erster Stelle steht
             openList.Sort();
             Node current = openList[0];
             openList.RemoveAt(0);
@@ -172,20 +170,15 @@ public class Pathfinder : MonoBehaviour
     }
 
 
-    /// DFS (Depth-First Search) zur Pfadfindung. Im Gegensatz zu Dijkstra/A*
-    /// findet DFS nicht zwingend den kürzesten Weg, wird aber
-    /// alternative Pfade und Sackgassen im Labyrinth aufzeigen.
-    /// Gibt den gefundenen Pfad als Stack in Vorwärts-Reihenfolge 
-    /// zurück und liefert über deadEndNodes alle besuchten Knoten, die NICHT
-    /// auf dem finalen Pfad liegen (= Sackgassen / alternative Wege).
-
+    // DFS pathfinder, gibt nicht zweingend kprzesten Weg aber zeigt alternative Pfade
+    //gibt gefundenen Pfad als Stack in vorwärtsreihenfolge zurück
     public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
     {
-        int visitedDFSNodes = 0;
+        int visitedDFSNodes = 0; // visited nodes zählen, um das tiefste zu finden
         deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
-        if (start == null || goal == null || generator == null)
+        if (start == null || goal == null || generator == null) // überprüft ob start, ziel oder generator null ist, wird ein fehler ausgegeben, weil der algo nicht funktionieren würde
         {
             Debug.LogError("DFS: Start, Goal oder Generator ist null!");
             return finalPath;
@@ -200,7 +193,7 @@ public class Pathfinder : MonoBehaviour
         cameFrom[start] = null;
 
         bool found = false;
-
+        // solange es knoten gibt, die noch untersucht werden müssen, wird der oberste Knoten vom Stack genommen und überprüft ob das Ziel erreicht ist.  Weil dfs tiefenorientiert untersucht es den untersten knoten
         while (stack.Count > 0)
         {
             Node current = stack.Pop();
@@ -212,6 +205,8 @@ public class Pathfinder : MonoBehaviour
                 break;
             }
 
+            // überprüft begehbare felder um aktuellen knoten wenn sie noch nicht besucht haben
+            //ignoriert gewichtung weil dfs nicht den kürzesten Weg sucht
             foreach (Node neighbor in generator.GetWalkableNeighbors(current))
             {
                 if (!visited.Contains(neighbor))
@@ -223,18 +218,19 @@ public class Pathfinder : MonoBehaviour
             }
         }
 
+        // wenn kein Pfad gefunden wurde, wird eine Warnung ausgegeben und ein leerer Pfad zurückgegeben.
         if (!found)
         {
             Debug.LogWarning("DFS: Kein Pfad zum Ziel gefunden!");
             return finalPath;
         }
 
-        // Pfad rekonstruieren (Ziel -> Start) und Knoten auf dem Pfad merken.
+        // Pfad rekonstruieren und Knoten auf dem Pfad merken
         HashSet<Node> pathSet = new HashSet<Node>();
         Node temp = goal;
         while (temp != null)
         {
-            finalPath.Push(temp); // Push dreht Ziel->Start in Start->Ziel (Vorwärts-Reihenfolge)
+            finalPath.Push(temp); // Push dreht Ziel->Start in Start->Ziel in vorwärts Reihenfolge um
             pathSet.Add(temp);
             cameFrom.TryGetValue(temp, out temp);
         }
@@ -249,4 +245,5 @@ public class Pathfinder : MonoBehaviour
         generator.logText.text += $"DFS: {visitedDFSNodes} Knoten untersucht\n";
         return finalPath;
     }
+   
 }

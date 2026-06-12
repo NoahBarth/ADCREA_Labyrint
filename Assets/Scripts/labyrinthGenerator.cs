@@ -388,7 +388,6 @@ public class labyrinthGenerator : MonoBehaviour
                 pc = player.AddComponent<PlayerController>();
 
             pc.SetGenerator(this);
-            pc.SetTrailLane(i);
 
             // Jedem Spieler seinen Algorithmus zuweisen, damit sie wissen, welchen Pfad sie entlanglaufen sollen. Die Zuordnung erfolgt in der Reihenfolge Dijkstra, AStar, DFS.
             switch (i)
@@ -404,9 +403,9 @@ public class labyrinthGenerator : MonoBehaviour
                     break;
             }
 
-            // Die Farbe des Spielers und seiner Trail-Marker entsprechend der vordefinierten Farben setzen. Die Spieler werden etwas kleiner skaliert, damit sie besser auf die Kacheln passen.
+            // Die Farbe des Spielers entsprechend der vordefinierten Farben setzen.
+            // Die Spieler werden etwas kleiner skaliert, damit sie besser auf die Kacheln passen.
             sr.color = playerColors[i];
-            pc.SetTrailColor(trailColors[i]);
             player.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
 
             // Bei aktiver Pfad-Visualisierung wartet der Spieler, bis seine Farbe

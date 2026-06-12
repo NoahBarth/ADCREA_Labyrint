@@ -2,12 +2,13 @@ using UnityEngine;
 using System.Collections;
 using TMPro;
 
-
+// dieser Skript steuert die Kamera, um das Labyrinth optimal anzuzeigen. 
+// Es berechnet die Grenzen des Labyrinths und passt die Kamera entsprechend an, 
+// damit das gesamte Labyrinth sichtbar ist. Es bietet auch eine Option, die Kamera automatisch nach der Generierung des Labyrinths anzupassen.
 public class CameraController : MonoBehaviour
 {
     [SerializeField] private Transform labyrinthRoot;
     [SerializeField] private Vector2 padding = new Vector2(1f, 1f);
-
     private void Start()
     {
         StartCoroutine(FitAfterGeneration());
