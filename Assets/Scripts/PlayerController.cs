@@ -90,7 +90,6 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
         transform.position = generator.GetWorldPosition(generator.StartNode);
-        MarkTrail(generator.StartNode, generator.StartNode);
         lastTrailNode = generator.StartNode;
 
         // Warten, bis der Generator diesen Spieler freigibt (nach seiner Pfad-Einfärbung).
@@ -115,23 +114,8 @@ public class PlayerController : MonoBehaviour
             }
 
             transform.position = target;
-            MarkTrail(nextNode, lastTrailNode);
             lastTrailNode = nextNode;
         }
     }
 
-    private void MarkTrail(Node node, Node previousNode)
-    {
-        if (generator == null || node == null)
-            return;
-
-        if (!markedCells.Add(node.position))
-            return;
-
-        Vector2Int direction = Vector2Int.zero;
-        if (previousNode != null)
-            direction = node.position - previousNode.position;
-
-        generator.PlaceTrailMarker(previousNode, node, trailColor, trailLane, direction);
-    }
 }

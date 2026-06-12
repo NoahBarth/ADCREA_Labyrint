@@ -24,10 +24,7 @@ public class Node : IComparable<Node>
         get { return gCost + hCost; }
     }
 
-    // Vergleicht zwei Knoten anhand ihrer F-Kosten. Dadurch kann die Open-List
-    // mit openList.Sort() OHNE Lambda sortiert werden: Der Standard-Comparer von
-    // List<Node> ruft automatisch diese CompareTo-Methode auf.
-    // Bei Dijkstra ist hCost = 0, daher entspricht fCost dort exakt gCost.
+   // Vergleichsmethode für die Sortierung der Open-List im A*-Algorithmus.
     public int CompareTo(Node other)
     {
         if (other == null)
