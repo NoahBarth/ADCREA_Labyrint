@@ -239,11 +239,6 @@ public class Pathfinder : MonoBehaviour
         }
 
         // Sackgassen / alternative Wege = besuchte Knoten, die nicht auf dem Pfad liegen.
-        foreach (Node n in visited)
-        {
-            if (!pathSet.Contains(n))
-                deadEndNodes.Add(n);
-        }
         Debug.Log($"DFS: {visitedDFSNodes} Knoten untersucht");
         if (generator.logText != null)
         {

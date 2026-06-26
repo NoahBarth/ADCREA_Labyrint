@@ -289,7 +289,7 @@ public class labyrinthGenerator : MonoBehaviour
         ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, DFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
         // Die Anzahl der Felder in den Pfaden auch im UI-Text anzeigen.
-        if (generator.logText != null) {
+        if (logText != null) {
             logText.text += $"Dijkstra-Weg: {dijkstraPath.Count} Felder\nDFS-Weg: {dfsPath.Count} Felder\nAStar-Weg: {aStarPath.Count} Felder";
         }
     }
