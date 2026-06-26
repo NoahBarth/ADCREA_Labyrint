@@ -176,10 +176,9 @@ public class Pathfinder : MonoBehaviour
 
     // DFS pathfinder, gibt nicht zweingend kprzesten Weg aber zeigt alternative Pfade
     //gibt gefundenen Pfad als Stack in vorwärtsreihenfolge zurück
-    public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator, out List<Node> deadEndNodes)
+    public Stack<Node> FindPathDFS(Node start, Node goal, labyrinthGenerator generator)
     {
         int visitedDFSNodes = 0; // visited nodes zählen, um das tiefste zu finden
-        deadEndNodes = new List<Node>();
         Stack<Node> finalPath = new Stack<Node>();
 
         if (start == null || goal == null || generator == null) // überprüft ob start, ziel oder generator null ist, wird ein fehler ausgegeben, weil der algo nicht funktionieren würde

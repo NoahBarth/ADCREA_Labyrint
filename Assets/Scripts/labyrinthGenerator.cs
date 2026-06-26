@@ -21,13 +21,12 @@ public class labyrinthGenerator : MonoBehaviour
 
     [Header("Pfad-Visualisierung")]
     public bool visualizePath = true;
-    private Pathfinder pathfinder;
     // Frei wählbare Farben: ein Weg wird per Dijkstra, der andere per DFS berechnet.
     public Color dijkstraPathColor = new Color(1f, 0.6f, 0.6f);   // Dijkstra-Weg
     public Color dfsPathColor = new Color(0.6f, 0.7f, 1f);   // DFS-Weg
     public Color aStarPathColor = new Color(0.6f, 0.7f, 1f);   // AStar-Weg
 
-    public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizeAlgorithmSteps true ist)
+    public float pathStepDelay = 0.0f; // Verzögerung zwischen den Schritten der Pfad-Visualisierung (nur relevant, wenn visualizePath true ist)
     [Tooltip("Wie viele Kacheln pro Schritt eingefärbt werden. Höher = schneller. Min. 1.")]
     public int pathTilesPerFrame = 999;
 
@@ -49,7 +48,6 @@ public class labyrinthGenerator : MonoBehaviour
 
     private void Start()
     {
-        pathfinder = GetComponent<Pathfinder>();
         // Validierung: Prefabs müssen zugewiesen sein
         if (wallPrefab == null || floorPrefab == null)
         {
@@ -85,8 +83,6 @@ public class labyrinthGenerator : MonoBehaviour
         IsReady = true;
         SpawnPlayers();
         StartCoroutine(CalculatePath());
-        // if (visualizePath)
-        //     StartCoroutine(RunPathVisualization());
         Debug.Log("Labyrinth fertig!");
     }
 
@@ -270,7 +266,7 @@ public class labyrinthGenerator : MonoBehaviour
 
         // Berechnet die Pfade für alle drei Algorithmen. Die Pfade werden als Stacks von Nodes zurückgegeben, damit die Spieler sie in der richtigen Reihenfolge ablaufen können.
         Stack<Node> dijkstraPath = pathfinder.FindPathDijkstra(StartNode, GoalNode, this);
-        Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this, out _);
+        Stack<Node> dfsPath = pathfinder.FindPathDFS(StartNode, GoalNode, this);
         Stack<Node> aStarPath = pathfinder.FindPathAStar(StartNode, GoalNode, this);
 
         // Die gefundenen Pfade den Spielern zuweisen, damit sie wissen, welchen Pfad sie entlanglaufen sollen.
@@ -293,7 +289,9 @@ public class labyrinthGenerator : MonoBehaviour
         ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
         Debug.Log($"Dijkstra-Weg: {dijkstraPath.Count} Felder, DFS-Weg: {dfsPath.Count} Felder, AStar-Weg: {aStarPath.Count} Felder eingefärbt.");
         // Die Anzahl der Felder in den Pfaden auch im UI-Text anzeigen.
-        logText.text += $"Dijkstra-Weg: {dijkstraPath.Count} Felder\nDFS-Weg: {dfsPath.Count} Felder\nAStar-Weg: {aStarPath.Count} Felder";
+        if (generator.logText != null) {
+            logText.text += $"Dijkstra-Weg: {dijkstraPath.Count} Felder\nDFS-Weg: {dfsPath.Count} Felder\nAStar-Weg: {aStarPath.Count} Felder";
+        }
     }
 
     // Hilfsmethode, um die Pfad-Visualisierung zu starten. 
@@ -302,13 +300,10 @@ public class labyrinthGenerator : MonoBehaviour
         // Pro Algorithmus den Pfad Kachel für Kachel einfärben, mit optionaler Verzögerung zwischen den Schritten, damit man die Entwicklung des Pfades sehen kann.
         yield return StartCoroutine(TintPath(dfsPath, dfsPathColor));
         // Nachdem der Pfad eingefärbt ist, den entsprechenden Spieler freigeben, damit er loslaufen kann.
-        // ReleasePlayer(PlayerController.PathfindingAlgorithm.DFS);
 
         yield return StartCoroutine(TintPath(aStarPath, aStarPathColor));
-        // ReleasePlayer(PlayerController.PathfindingAlgorithm.AStar);
 
         yield return StartCoroutine(TintPath(dijkstraPath, dijkstraPathColor));
-        // ReleasePlayer(PlayerController.PathfindingAlgorithm.Dijkstra);
     }
 
 
@@ -385,8 +380,9 @@ public class labyrinthGenerator : MonoBehaviour
             SpriteRenderer sr = player.GetComponent<SpriteRenderer>();
             if (sr == null) sr = player.AddComponent<SpriteRenderer>();
 
-            if (player.GetComponent<Pathfinder>() == null)
+            if (player.GetComponent<Pathfinder>() == null) {
                 player.AddComponent<Pathfinder>();
+            }
 
             PlayerController pc = player.GetComponent<PlayerController>();
             if (pc == null)
