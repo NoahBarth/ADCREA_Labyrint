@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using TMPro;
 
 public class Pathfinder : MonoBehaviour
 {
@@ -229,12 +228,10 @@ public class Pathfinder : MonoBehaviour
         }
 
         // Pfad rekonstruieren und Knoten auf dem Pfad merken
-        HashSet<Node> pathSet = new HashSet<Node>();
         Node temp = goal;
         while (temp != null)
         {
             finalPath.Push(temp); // Push dreht Ziel->Start in Start->Ziel in vorwärts Reihenfolge um
-            pathSet.Add(temp);
             cameFrom.TryGetValue(temp, out temp);
         }
 

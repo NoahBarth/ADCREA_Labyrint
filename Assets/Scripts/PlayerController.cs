@@ -71,6 +71,11 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
 
+        while (assignedPath == null || assignedPath.Count == 0)
+        {
+            yield return null;
+        }
+        
         Stack<Node> path = assignedPath;
 
         if (path == null || path.Count == 0)
@@ -81,8 +86,9 @@ public class PlayerController : MonoBehaviour
         transform.position = generator.GetWorldPosition(generator.StartNode);
 
         // Warten, bis der Generator diesen Spieler freigibt (nach seiner Pfad-Einfärbung).
-        while (waitForRelease && !released)
+        while (waitForRelease && !released){
             yield return null;
+        }
 
         yield return StartCoroutine(MoveAlongPath(path));
         Debug.Log("Ziel erreicht!");

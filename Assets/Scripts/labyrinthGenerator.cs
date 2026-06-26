@@ -191,7 +191,6 @@ public class labyrinthGenerator : MonoBehaviour
                 {
                     grid[randomX, randomY].type = TileType.Floor;
                     pathsCarved++;
-                    Debug.Log($"Additional path {pathsCarved} carved at ({randomX}, {randomY})");
                 }
             }
         }
@@ -295,11 +294,10 @@ public class labyrinthGenerator : MonoBehaviour
     }
 
     // Hilfsmethode, um die Pfad-Visualisierung zu starten. 
-    private IEnumerator RunPathVisualization(Stack<Node> dijkstraPath = null, Stack<Node> dfsPath = null, Stack<Node> aStarPath = null)
+    private IEnumerator RunPathVisualization(Stack<Node> dijkstraPath, Stack<Node> dfsPath, Stack<Node> aStarPath)
     {
         // Pro Algorithmus den Pfad Kachel für Kachel einfärben, mit optionaler Verzögerung zwischen den Schritten, damit man die Entwicklung des Pfades sehen kann.
         yield return StartCoroutine(TintPath(dfsPath, dfsPathColor));
-        // Nachdem der Pfad eingefärbt ist, den entsprechenden Spieler freigeben, damit er loslaufen kann.
 
         yield return StartCoroutine(TintPath(aStarPath, aStarPathColor));
 
@@ -379,10 +377,6 @@ public class labyrinthGenerator : MonoBehaviour
 
             SpriteRenderer sr = player.GetComponent<SpriteRenderer>();
             if (sr == null) sr = player.AddComponent<SpriteRenderer>();
-
-            if (player.GetComponent<Pathfinder>() == null) {
-                player.AddComponent<Pathfinder>();
-            }
 
             PlayerController pc = player.GetComponent<PlayerController>();
             if (pc == null)
